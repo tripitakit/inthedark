@@ -4,6 +4,7 @@ import { GameState } from './GameState';
 import { graphWorld } from './GraphWorld';
 import { audioEngine } from '../audio/AudioEngine';
 import type { Sonar } from '../audio/Sonar';
+import type { AmbienceManager } from '../audio/AmbienceManager';
 
 // Label leggibili per le direzioni
 const DIRECTION_LABELS: Record<Direction, string> = {
@@ -19,6 +20,7 @@ const DIRECTION_LABELS: Record<Direction, string> = {
 export class Movement {
   private gameState: GameState;
   private sonar: Sonar | null = null;
+  private ambienceManager: AmbienceManager | null = null;
 
   constructor(gameState: GameState) {
     this.gameState = gameState;
@@ -29,6 +31,13 @@ export class Movement {
    */
   setSonar(sonar: Sonar): void {
     this.sonar = sonar;
+  }
+
+  /**
+   * Imposta l'istanza AmbienceManager da usare
+   */
+  setAmbienceManager(ambienceManager: AmbienceManager): void {
+    this.ambienceManager = ambienceManager;
   }
 
   /**
@@ -45,6 +54,14 @@ export class Movement {
       // Movimento valido
       this.gameState.setCurrentNode(targetNode);
       audioEngine.playFootstep();
+
+      // Trigger ambient transition
+      if (this.ambienceManager) {
+        const node = graphWorld.getNode(targetNode);
+        if (node?.ambience) {
+          this.ambienceManager.transitionTo(node.ambience);
+        }
+      }
 
       console.log(`Movimento: ${currentNode} → ${targetNode} (${direction})`);
       this.gameState.debugLog();

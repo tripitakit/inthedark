@@ -31,7 +31,7 @@ Progressione attraverso tre macro-ambienti con feeling fantascientifico astratto
 - **Audio Engine**: Web Audio API
 - **Sintesi Vocale**: Web Speech Synthesis API (fallback) + eventuale servizio cloud per voci di qualità
 - **Linguaggio**: TypeScript
-- **Asset Audio**: Clips royalty-free + suoni generati proceduralmente
+- **Asset Audio**: Tutti i suoni generati proceduralmente via Web Audio API (nessun file audio esterno)
 
 ### Requisiti Browser
 
@@ -218,8 +218,10 @@ Usata per feedback testuali in punti salienti:
     type: "cave",
     reverbDecay: 2.5,
     reverbWet: 0.4,
+    reverbCharacter: "natural",  // "natural" | "metallic"
     sounds: [
-      { id: "water_drip", position: { x: -1, y: 0, z: 2 }, volume: 0.3 }
+      { id: "drip1", type: "waterDrip", volume: 0.3 },
+      { id: "wind1", type: "wind", volume: 0.15 }
     ]
   },
 
@@ -260,31 +262,31 @@ Usata per feedback testuali in punti salienti:
 ```
 /src
   /audio
-    AudioEngine.js      # Gestione Web Audio API, contesto, master output
-    SpatialAudio.js     # Panner, listener, spazializzazione 3D
-    Reverb.js           # Gestione riverbero convolver/algoritmico
-    Sonar.js            # Logica ping/eco
-    Compass.js          # Toni bussola
-    SoundLibrary.js     # Caricamento e gestione buffer audio
+    AudioEngine.ts      # Gestione Web Audio API, contesto, master output, sintesi suoni
+    Reverb.ts           # Riverbero algoritmico Schroeder (comb + allpass filters)
+    AmbientSounds.ts    # Generatori procedurali (waterDrip, electricHum, mechanicalBreath, wind)
+    AmbienceManager.ts  # Orchestrazione ambiente per nodo, transizioni
+    Sonar.ts            # Logica sequenza sonar (bussola + ping + eco)
+    SpatialAudio.ts     # Panner, calcolo pan relativo
 
   /game
-    GameState.js        # Stato corrente del gioco
-    GraphWorld.js       # Definizione e navigazione del grafo
-    Movement.js         # Logica movimento e rotazione
-    Interaction.js      # Logica raccolta/uso oggetti
-    Puzzle.js           # Gestione chiavi/serrature
+    GameState.ts        # Stato corrente del gioco
+    GraphWorld.ts       # Definizione e navigazione del grafo
+    Movement.ts         # Logica movimento, rotazione, trigger transizioni ambiente
+    Interaction.ts      # Logica raccolta/uso oggetti (TODO)
+    Puzzle.ts           # Gestione chiavi/serrature (TODO)
 
   /input
-    InputHandler.js     # Gestione tastiera
+    InputHandler.ts     # Gestione tastiera
 
   /speech
-    Narrator.js         # Sintesi vocale per messaggi
+    Narrator.ts         # Sintesi vocale per messaggi (TODO)
 
   /data
     levels/             # Definizioni JSON dei livelli/grafi
-    sounds/             # File audio
 
-  main.js               # Entry point, inizializzazione
+  /types.ts             # Interfacce TypeScript
+  main.ts               # Entry point, inizializzazione
   index.html            # Pagina con schermata start
 ```
 
@@ -337,34 +339,32 @@ Usata per feedback testuali in punti salienti:
 
 ---
 
-## 12. Assets Audio Necessari
+## 12. Suoni Procedurali Implementati
 
-### Suoni di Sistema
+### Suoni di Sistema (AudioEngine.ts)
 
-- [ ] Suono passi (varianti per superficie)
-- [ ] Suono ostacolo/muro
-- [ ] Suono rotazione (opzionale)
-- [ ] Ping sonar (andata)
-- [ ] Eco sonar (varianti per materiale: roccia, metallo, vuoto)
-- [ ] Eco oggetto interattivo
-- [ ] Toni bussola (4 direzioni)
-- [ ] Suono raccolta oggetto
-- [ ] Suono neutro A (niente qui)
-- [ ] Suono neutro B (non funziona)
-- [ ] Suono successo/sblocco
-- [ ] Suono vittoria
+- [x] Suono passi (noise burst filtrato)
+- [x] Suono ostacolo/muro (tono basso con decay)
+- [x] Ping sonar (sweep 1200→800 Hz)
+- [x] Eco sonar (ping filtrato, delay semantico)
+- [x] Toni bussola (C4/C5 per N/S, G4/G5 per E/O)
+- [ ] Suono raccolta oggetto (TODO)
+- [ ] Suono neutro A/B (TODO)
+- [ ] Suono successo/sblocco (TODO)
 
-### Ambienze
+### Generatori Ambientali (AmbientSounds.ts)
 
-- [ ] Caverna (gocce, eco naturale)
-- [ ] Labirinto (transizione)
-- [ ] Astronave (ronzii, respiri meccanici)
+- [x] **waterDrip**: Gocce d'acqua (noise burst + bandpass + random pitch)
+- [x] **electricHum**: Ronzio elettrico (50Hz + armoniche + LFO)
+- [x] **mechanicalBreath**: Respiro meccanico (noise + LFO lento 5s ciclo)
+- [x] **wind**: Vento (pink noise + bandpass modulato)
 
-### Impulse Response per Riverbero
+### Riverbero Algoritmico (Reverb.ts)
 
-- [ ] IR caverna naturale
-- [ ] IR corridoio pietra
-- [ ] IR ambiente metallico
+- [x] Schroeder reverb: 4 comb filters + 2 allpass filters
+- [x] Parametri dinamici: decay (0.5-5s), wet/dry mix
+- [x] Character: "natural" vs "metallic" (delay times diversi)
+- [x] Transizioni graduali tra configurazioni
 
 ---
 
@@ -411,6 +411,38 @@ Usata per feedback testuali in punti salienti:
 
 ## 14. Changelog
 
+### Versione 1.3
+
+**Milestone 3: Sistema Ambiente Sonoro**
+
+1. **Riverbero algoritmico (Reverb.ts)**:
+   - Implementazione Schroeder con 4 comb filters in parallelo + 2 allpass in serie
+   - Allpass filters corretti con feedforward (-g) e feedback (+g) paths
+   - Parametri dinamici: decay time, wet/dry mix, character (natural/metallic)
+   - Transizioni graduali tra configurazioni
+
+2. **Generatori ambientali procedurali (AmbientSounds.ts)**:
+   - Base class astratta `BaseAmbientGenerator` per codice comune
+   - 4 generatori: `waterDrip`, `electricHum`, `mechanicalBreath`, `wind`
+   - Buffer di rumore cachati (white noise, pink noise) per efficienza
+   - Fade in/out per transizioni smooth
+
+3. **Orchestrazione ambiente (AmbienceManager.ts)**:
+   - Gestione reverb globale + pool generatori attivi
+   - Crossfade tra configurazioni durante movimento
+   - Cleanup corretto dei timeout pendenti
+
+4. **Integrazione movimento**:
+   - `Movement.ts` triggera `transitionTo()` su cambio nodo
+   - Ogni nodo ha configurazione ambience distinta
+
+5. **Configurazione test level**:
+   - Centro: caverna (gocce + vento, riverbero naturale)
+   - Nord: caverna grande (decay maggiore)
+   - Est: transizione (gocce + ronzio)
+   - Sud: metallico (ronzio elettrico)
+   - Ovest: meccanico (respiro lento)
+
 ### Versione 1.2
 
 **Modifiche al sistema sonar:**
@@ -438,4 +470,4 @@ Usata per feedback testuali in punti salienti:
 ---
 
 _Documento generato per utilizzo con claude-code_
-_Versione: 1.2_
+_Versione: 1.3_

@@ -9,10 +9,16 @@ export interface NodeConnections {
   west: string | null;
 }
 
+// Tipi di generatori ambientali procedurali
+export type AmbientSoundType = 'waterDrip' | 'electricHum' | 'mechanicalBreath' | 'wind';
+
+// Carattere del riverbero
+export type ReverbCharacter = 'natural' | 'metallic';
+
 // Suono ambientale posizionato
 export interface AmbientSound {
   id: string;
-  position: { x: number; y: number; z: number };
+  type: AmbientSoundType;
   volume: number;
 }
 
@@ -21,6 +27,7 @@ export interface AmbienceConfig {
   type: string;
   reverbDecay: number;
   reverbWet: number;
+  reverbCharacter: ReverbCharacter;
   sounds: AmbientSound[];
 }
 

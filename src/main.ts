@@ -1,5 +1,6 @@
 import { audioEngine } from './audio/AudioEngine';
 import { Sonar } from './audio/Sonar';
+import { AmbienceManager } from './audio/AmbienceManager';
 import { GameState } from './game/GameState';
 import { graphWorld } from './game/GraphWorld';
 import { Movement } from './game/Movement';
@@ -69,6 +70,17 @@ async function startGame(): Promise<void> {
   // Inizializza sistema sonar
   const sonar = new Sonar(audioEngine, graphWorld, gameState);
   movement.setSonar(sonar);
+
+  // Inizializza sistema ambiente
+  const ambienceManager = new AmbienceManager(audioEngine);
+  ambienceManager.init();
+  movement.setAmbienceManager(ambienceManager);
+
+  // Imposta ambiente iniziale
+  const startNode = graphWorld.getNode(graphWorld.getStartNode());
+  if (startNode?.ambience) {
+    ambienceManager.setAmbience(startNode.ambience);
+  }
 
   // Inizializza input handler con callback per aggiornare UI
   inputHandler = new InputHandler(movement, updateStatus);
