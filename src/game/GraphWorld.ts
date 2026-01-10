@@ -1,4 +1,4 @@
-import type { GameNode, LevelData, Direction } from '../types';
+import type { GameNode, LevelData, Direction, Lock } from '../types';
 
 /**
  * GraphWorld - Gestisce il grafo del mondo di gioco
@@ -60,6 +60,20 @@ export class GraphWorld {
 
     const directions: Direction[] = ['north', 'east', 'south', 'west'];
     return directions.filter((dir) => node.connections[dir] !== null);
+  }
+
+  /**
+   * Ottiene il lock che blocca una connessione (se esiste)
+   * Il lock è definito sul nodo di destinazione
+   */
+  getLock(nodeId: string, direction: Direction): Lock | null {
+    const targetNodeId = this.getConnection(nodeId, direction);
+    if (!targetNodeId) return null;
+
+    const targetNode = this.nodes.get(targetNodeId);
+    if (!targetNode) return null;
+
+    return targetNode.lock ?? null;
   }
 
   /**

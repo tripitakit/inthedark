@@ -40,6 +40,7 @@ export interface GameItem {
 
 // Serratura
 export interface Lock {
+  id: string;
   requiredItem: string;
   unlocks: string;
   unlocked: boolean;

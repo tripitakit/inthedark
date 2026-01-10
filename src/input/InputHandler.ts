@@ -1,10 +1,12 @@
 import { Movement } from '../game/Movement';
+import type { Interaction } from '../game/Interaction';
 
 /**
  * InputHandler - Gestisce gli input da tastiera
  */
 export class InputHandler {
   private movement: Movement;
+  private interaction: Interaction | null = null;
   private onAction?: () => void;
   private enabled: boolean = false;
   private isMoving: boolean = false; // Previene input durante movimento
@@ -12,6 +14,13 @@ export class InputHandler {
   constructor(movement: Movement, onAction?: () => void) {
     this.movement = movement;
     this.onAction = onAction;
+  }
+
+  /**
+   * Imposta l'istanza Interaction da usare
+   */
+  setInteraction(interaction: Interaction): void {
+    this.interaction = interaction;
   }
 
   /**
@@ -65,9 +74,10 @@ export class InputHandler {
         break;
 
       case ' ':
-        // Spazio per interazione (da implementare in Milestone 4)
         event.preventDefault();
-        console.log('Interazione - non ancora implementata');
+        if (this.interaction) {
+          this.interaction.interact();
+        }
         this.onAction?.();
         break;
     }

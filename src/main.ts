@@ -4,6 +4,7 @@ import { AmbienceManager } from './audio/AmbienceManager';
 import { GameState } from './game/GameState';
 import { graphWorld } from './game/GraphWorld';
 import { Movement } from './game/Movement';
+import { Interaction } from './game/Interaction';
 import { InputHandler } from './input/InputHandler';
 import testLevel from './data/levels/test-level.json';
 import type { LevelData } from './types';
@@ -40,8 +41,9 @@ function updateStatus(): void {
   const node = graphWorld.getNode(gameState.currentNode);
   const nodeName = node?.name ?? gameState.currentNode;
   const orientation = movement.getOrientationLabel();
+  const heldItem = gameState.heldItem?.id ?? 'nessuno';
 
-  statusElement.textContent = `${nodeName} | Orientamento: ${orientation}`;
+  statusElement.textContent = `${nodeName} | Orientamento: ${orientation} | Oggetto: ${heldItem}`;
 }
 
 /**
@@ -82,8 +84,12 @@ async function startGame(): Promise<void> {
     ambienceManager.setAmbience(startNode.ambience);
   }
 
+  // Inizializza sistema interazione
+  const interaction = new Interaction(gameState, graphWorld);
+
   // Inizializza input handler con callback per aggiornare UI
   inputHandler = new InputHandler(movement, updateStatus);
+  inputHandler.setInteraction(interaction);
   inputHandler.enable();
 
   // Aggiorna UI

@@ -343,14 +343,15 @@ Usata per feedback testuali in punti salienti:
 
 ### Suoni di Sistema (AudioEngine.ts)
 
-- [x] Suono passi (noise burst filtrato)
+- [x] Suono passi (noise burst filtrato, 4 passi con intervallo 0.75s)
 - [x] Suono ostacolo/muro (tono basso con decay)
 - [x] Ping sonar (sweep 1200→800 Hz)
 - [x] Eco sonar (ping filtrato, delay semantico)
 - [x] Toni bussola (C4/C5 per N/S, G4/G5 per E/O)
-- [ ] Suono raccolta oggetto (TODO)
+- [x] Suono raccolta oggetto (arpeggio C5→E5→G5)
+- [x] Suono sblocco serratura (click metallico + sweep ascendente)
+- [x] Suono errore/rifiuto (tono basso discendente)
 - [ ] Suono neutro A/B (TODO)
-- [ ] Suono successo/sblocco (TODO)
 
 ### Generatori Ambientali (AmbientSounds.ts)
 
@@ -410,6 +411,41 @@ Usata per feedback testuali in punti salienti:
 ---
 
 ## 14. Changelog
+
+### Versione 1.5
+
+**Milestone 4: Sistema Puzzle**
+
+1. **Sistema interazione (Interaction.ts)**:
+   - Nuova classe per gestire raccolta oggetti e uso chiavi
+   - Logica contestuale: prima pickup, poi use su lock
+   - Chiavi consumate quando usate
+
+2. **Nuovi suoni procedurali (AudioEngine.ts)**:
+   - `playPickup()`: arpeggio ascendente C5→E5→G5
+   - `playUnlock()`: click metallico + sweep 200→400Hz
+   - `playError()`: tono sawtooth 150→80Hz
+
+3. **Verifica serrature (Movement.ts)**:
+   - Controllo lock prima di muoversi
+   - Passaggi bloccati finché non sbloccati con chiave
+
+4. **Supporto lock (GraphWorld.ts)**:
+   - Nuovo metodo `getLock(nodeId, direction)`
+   - Lock definiti sul nodo di destinazione
+
+5. **Integrazione input (InputHandler.ts)**:
+   - Tasto Spazio collegato a `Interaction.interact()`
+   - Metodo `setInteraction()` per dependency injection
+
+6. **Configurazione test level**:
+   - Centro: chiave_nord
+   - Nord: porta bloccata (richiede chiave_nord)
+   - Est: chiave_ovest
+   - Ovest: porta bloccata (richiede chiave_ovest)
+
+7. **Aggiornamento UI (main.ts)**:
+   - Status mostra oggetto tenuto in mano
 
 ### Versione 1.4
 
@@ -489,4 +525,4 @@ Usata per feedback testuali in punti salienti:
 ---
 
 _Documento generato per utilizzo con claude-code_
-_Versione: 1.4_
+_Versione: 1.5_

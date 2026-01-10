@@ -51,7 +51,15 @@ export class Movement {
     const targetNode = graphWorld.getConnection(currentNode, direction);
 
     if (targetNode) {
-      // Movimento valido: riproduci 3 passi prima di entrare nel nuovo nodo
+      // Verifica se il passaggio è bloccato da una serratura
+      const lock = graphWorld.getLock(currentNode, direction);
+      if (lock && !this.gameState.isPassageUnlocked(lock.id)) {
+        audioEngine.playObstacle();
+        console.log(`Passaggio bloccato da serratura: ${lock.id}`);
+        return false;
+      }
+
+      // Movimento valido: riproduci 4 passi prima di entrare nel nuovo nodo
       await audioEngine.playFootsteps();
 
       // Ora entra nel nuovo nodo
@@ -70,7 +78,7 @@ export class Movement {
 
       return true;
     } else {
-      // Movimento bloccato
+      // Movimento bloccato (nessun passaggio)
       audioEngine.playObstacle();
       console.log(`Movimento bloccato: nessun passaggio a ${direction}`);
 
