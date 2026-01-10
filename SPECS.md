@@ -411,6 +411,25 @@ Usata per feedback testuali in punti salienti:
 
 ## 14. Changelog
 
+### Versione 1.4
+
+**Miglioramento suono passi:**
+
+1. **Camminata realistica (AudioEngine.ts)**:
+   - Nuovo metodo `playFootsteps()` che riproduce 3 passi con intervallo di 0.5s
+   - Metodo privato `playFootstepAt(startTime)` per scheduling preciso
+   - Promise-based per sincronizzazione con transizione nodo
+
+2. **Movimento asincrono (Movement.ts)**:
+   - `moveForward()` ora è async e restituisce `Promise<boolean>`
+   - I passi vengono riprodotti prima di entrare nel nuovo nodo
+   - La transizione ambiente avviene solo dopo il completamento della camminata
+
+3. **Prevenzione input multipli (InputHandler.ts)**:
+   - Flag `isMoving` per bloccare input durante la camminata
+   - Handler separato `handleMoveForward()` per gestione asincrona
+   - Rotazioni e sonar restano istantanei
+
 ### Versione 1.3
 
 **Milestone 3: Sistema Ambiente Sonoro**
@@ -470,4 +489,4 @@ Usata per feedback testuali in punti salienti:
 ---
 
 _Documento generato per utilizzo con claude-code_
-_Versione: 1.3_
+_Versione: 1.4_

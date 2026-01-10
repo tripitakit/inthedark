@@ -7,6 +7,7 @@ export class InputHandler {
   private movement: Movement;
   private onAction?: () => void;
   private enabled: boolean = false;
+  private isMoving: boolean = false; // Previene input durante movimento
 
   constructor(movement: Movement, onAction?: () => void) {
     this.movement = movement;
@@ -39,43 +40,52 @@ export class InputHandler {
   private handleKeyDown = (event: KeyboardEvent): void => {
     if (!this.enabled) return;
 
-    let handled = false;
-
     switch (event.key) {
       case 'ArrowUp':
         event.preventDefault();
-        this.movement.moveForward();
-        handled = true;
+        this.handleMoveForward();
         break;
 
       case 'ArrowLeft':
         event.preventDefault();
         this.movement.rotateLeft();
-        handled = true;
+        this.onAction?.();
         break;
 
       case 'ArrowRight':
         event.preventDefault();
         this.movement.rotateRight();
-        handled = true;
+        this.onAction?.();
         break;
 
       case 'Enter':
         event.preventDefault();
         this.movement.activateSonar();
-        handled = true;
+        this.onAction?.();
         break;
 
       case ' ':
         // Spazio per interazione (da implementare in Milestone 4)
         event.preventDefault();
         console.log('Interazione - non ancora implementata');
-        handled = true;
+        this.onAction?.();
         break;
     }
-
-    if (handled && this.onAction) {
-      this.onAction();
-    }
   };
+
+  /**
+   * Gestisce il movimento in avanti (asincrono)
+   */
+  private async handleMoveForward(): Promise<void> {
+    // Previeni input multipli durante il movimento
+    if (this.isMoving) return;
+
+    this.isMoving = true;
+    try {
+      await this.movement.moveForward();
+      this.onAction?.();
+    } finally {
+      this.isMoving = false;
+    }
+  }
 }

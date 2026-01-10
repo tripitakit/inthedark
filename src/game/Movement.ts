@@ -42,18 +42,20 @@ export class Movement {
 
   /**
    * Tenta di muoversi avanti nella direzione corrente
-   * @returns true se il movimento è riuscito
+   * @returns Promise<true> se il movimento è riuscito, Promise<false> altrimenti
    */
-  moveForward(): boolean {
+  async moveForward(): Promise<boolean> {
     const currentNode = this.gameState.currentNode;
     const direction = this.gameState.orientation;
 
     const targetNode = graphWorld.getConnection(currentNode, direction);
 
     if (targetNode) {
-      // Movimento valido
+      // Movimento valido: riproduci 3 passi prima di entrare nel nuovo nodo
+      await audioEngine.playFootsteps();
+
+      // Ora entra nel nuovo nodo
       this.gameState.setCurrentNode(targetNode);
-      audioEngine.playFootstep();
 
       // Trigger ambient transition
       if (this.ambienceManager) {

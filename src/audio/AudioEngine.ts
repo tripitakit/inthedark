@@ -57,16 +57,15 @@ export class AudioEngine {
   }
 
   /**
-   * Riproduce suono di passi (sintesi procedurale)
+   * Riproduce un singolo suono di passo (sintesi procedurale)
+   * @param startTime Tempo di inizio nel contesto audio
    */
-  playFootstep(): void {
+  private playFootstepAt(startTime: number): void {
     if (!this.context || !this.masterGain) return;
-
-    const now = this.context.currentTime;
 
     // Noise burst per simulare passo
     const duration = 0.15;
-    const bufferSize = this.context.sampleRate * duration;
+    const bufferSize = Math.floor(this.context.sampleRate * duration);
     const buffer = this.context.createBuffer(1, bufferSize, this.context.sampleRate);
     const data = buffer.getChannelData(0);
 
@@ -92,8 +91,42 @@ export class AudioEngine {
     filter.connect(gain);
     gain.connect(this.masterGain);
 
-    source.start(now);
-    source.stop(now + duration);
+    source.start(startTime);
+    source.stop(startTime + duration);
+  }
+
+  /**
+   * Riproduce suono di passi (sintesi procedurale) - singolo passo
+   */
+  playFootstep(): void {
+    if (!this.context) return;
+    this.playFootstepAt(this.context.currentTime);
+  }
+
+  /**
+   * Riproduce 3 passi con intervallo di 0.5 secondi
+   * @returns Promise che si risolve quando tutti i passi sono completati
+   */
+  playFootsteps(): Promise<void> {
+    if (!this.context || !this.masterGain) {
+      return Promise.resolve();
+    }
+
+    const now = this.context.currentTime;
+    const stepInterval = 0.5;
+    const stepCount = 3;
+    const stepDuration = 0.15;
+
+    // Schedula 3 passi
+    for (let i = 0; i < stepCount; i++) {
+      this.playFootstepAt(now + i * stepInterval);
+    }
+
+    // Ritorna Promise che si risolve dopo l'ultimo passo
+    const totalDuration = (stepCount - 1) * stepInterval + stepDuration;
+    return new Promise(resolve => {
+      setTimeout(resolve, totalDuration * 1000);
+    });
   }
 
   /**
