@@ -103,19 +103,23 @@ Il mondo è rappresentato come un **grafo orientato**:
 Attivato con tasto Enter, restituisce sequenza:
 
 1. **Tono bussola**: indica direzione corrente di orientamento
-2. **Ping di andata**: suono emesso dal giocatore
-3. **Eco di ritorno**: modulato in base all'ambiente e oggetti presenti
+2. **Ping di andata**: suono emesso dal giocatore (sweep 1200→800 Hz)
+3. **Eco di ritorno**: solo dalla direzione frontale, stesso tono del ping ma filtrato
 
 ### Sonar - Dettagli Eco di Ritorno
 
-L'eco comunica:
+L'eco arriva **solo dalla direzione in cui è rivolto il giocatore** e comunica la presenza o assenza di un passaggio attraverso il **delay temporale**:
 
-- **Distanza**: delay e volume dell'eco
-- **Tipo di superficie**: timbro dell'eco (roccia, metallo, vuoto/passaggio)
-- **Oggetti interattivi**: suono distintivo per presenza di oggetti raccoglibili
-- **Direzione**: echi spazializzati per indicare dove sono passaggi/oggetti
+| Situazione | Delay eco | Significato |
+|------------|-----------|-------------|
+| **Muro** (no passaggio) | ~150ms (breve) | Il suono rimbalza subito su una parete vicina |
+| **Passaggio** aperto | ~450ms (lungo) | Il suono viaggia lontano prima di tornare |
 
-Se più elementi rilevanti sono presenti, stratificare più echi spazializzati.
+**Caratteristiche dell'eco:**
+- Stesso pattern frequenza del ping (1200→800 Hz)
+- Filtro passa-basso applicato (simula il viaggio del suono)
+- Passaggio: più filtrato (600 Hz cutoff) e attutito
+- Muro: meno filtrato (1000 Hz cutoff) e più forte
 
 ### Toni Bussola
 
@@ -407,7 +411,19 @@ Usata per feedback testuali in punti salienti:
 
 ## 14. Changelog
 
-### Versione 1.1 (Sessione corrente)
+### Versione 1.2
+
+**Modifiche al sistema sonar:**
+
+1. **Eco solo frontale**: L'eco del sonar ora arriva solo dalla direzione in cui il giocatore è rivolto, non più da tutte le direzioni.
+
+2. **Delay semantico**: Il ritardo dell'eco comunica informazioni:
+   - Eco veloce (~150ms) = muro vicino, nessun passaggio
+   - Eco lento (~450ms) = spazio aperto, passaggio disponibile
+
+3. **Eco come ping filtrato**: L'eco usa lo stesso pattern sonoro del ping (sweep 1200→800 Hz) ma con filtro passa-basso applicato per simulare il viaggio del suono.
+
+### Versione 1.1
 
 **Modifiche al sistema audio bussola:**
 
@@ -422,4 +438,4 @@ Usata per feedback testuali in punti salienti:
 ---
 
 _Documento generato per utilizzo con claude-code_
-_Versione: 1.1_
+_Versione: 1.2_
