@@ -1,0 +1,63 @@
+{
+  "id": "test",
+  "name": "Livello di Test",
+  "startNode": "centro",
+  "startOrientation": "north",
+  "nodes": [
+    {
+      "id": "centro",
+      "name": "Centro",
+      "description": "Sei al centro di una piccola caverna. Senti passaggi in tutte le direzioni.",
+      "connections": {
+        "north": "nord",
+        "east": "est",
+        "south": "sud",
+        "west": "ovest"
+      }
+    },
+    {
+      "id": "nord",
+      "name": "Passaggio Nord",
+      "description": "Un corridoio stretto. L'unica via è tornare indietro verso sud.",
+      "connections": {
+        "north": null,
+        "east": null,
+        "south": "centro",
+        "west": null
+      }
+    },
+    {
+      "id": "est",
+      "name": "Passaggio Est",
+      "description": "Una piccola alcova. Puoi solo tornare a ovest.",
+      "connections": {
+        "north": null,
+        "east": null,
+        "south": null,
+        "west": "centro"
+      }
+    },
+    {
+      "id": "sud",
+      "name": "Passaggio Sud",
+      "description": "L'ingresso della caverna. Luce fioca filtra dall'esterno. Vai a nord per esplorare.",
+      "connections": {
+        "north": "centro",
+        "east": null,
+        "south": null,
+        "west": null
+      }
+    },
+    {
+      "id": "ovest",
+      "name": "Passaggio Ovest",
+      "description": "Un angolo umido. Gocce d'acqua risuonano. Torna a est.",
+      "connections": {
+        "north": null,
+        "east": "centro",
+        "south": null,
+        "west": null
+      }
+    }
+  ]
+}

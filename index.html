@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>In The Dark</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #000;
+      color: #fff;
+      font-family: system-ui, sans-serif;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #start-screen {
+      text-align: center;
+      cursor: pointer;
+    }
+
+    #start-screen h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    #start-screen p {
+      font-size: 1.2rem;
+      opacity: 0.8;
+    }
+
+    #game-screen {
+      display: none;
+      text-align: center;
+    }
+
+    #game-screen.active {
+      display: block;
+    }
+
+    #start-screen.hidden {
+      display: none;
+    }
+
+    #status {
+      font-size: 1rem;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+  <div id="start-screen">
+    <h1>In The Dark</h1>
+    <p>Premi un tasto per iniziare</p>
+  </div>
+
+  <div id="game-screen">
+    <p id="status">Gioco attivo - usa le frecce per muoverti</p>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
