@@ -351,7 +351,8 @@ Usata per feedback testuali in punti salienti:
 - [x] Suono raccolta oggetto (arpeggio C5→E5→G5)
 - [x] Suono sblocco serratura (click metallico + sweep ascendente)
 - [x] Suono errore/rifiuto (tono basso discendente)
-- [ ] Suono neutro A/B (TODO)
+- [x] Suono presenza oggetto (arpeggio shimmer 800→1000→1200 Hz)
+- [x] Suono pickup vuoto (tono basso sordo 100→70 Hz)
 
 ### Generatori Ambientali (AmbientSounds.ts)
 
@@ -411,6 +412,30 @@ Usata per feedback testuali in punti salienti:
 ---
 
 ## 14. Changelog
+
+### Versione 1.6
+
+**Miglioramenti Audio Feedback + Bug Fix Sonar**
+
+1. **Nuovi suoni feedback (AudioEngine.ts)**:
+   - `playItemPresence()`: shimmer delicato (800→1000→1200 Hz) per segnalare presenza oggetto
+   - `playEmptyPickup()`: tono basso sordo (100→70 Hz) per pickup fallito
+
+2. **Bug fix sonar (Sonar.ts)**:
+   - Il sonar ora verifica lo stato delle serrature
+   - Un passaggio bloccato viene indicato come "muro" (eco veloce)
+   - Solo dopo lo sblocco viene indicato come "passaggio aperto" (eco lento)
+
+3. **Feedback presenza oggetto**:
+   - Suono shimmer all'avvio se nodo iniziale contiene oggetto (main.ts)
+   - Suono shimmer quando si entra in un nodo con oggetto non raccolto (Movement.ts)
+
+4. **Feedback pickup vuoto (Interaction.ts)**:
+   - Suono sordo quando si preme Spazio senza interazioni disponibili
+
+5. **Pattern generale lock check**:
+   - Documentato pattern per verificare passaggi accessibili
+   - Da usare ovunque si determini se un passaggio è transitabile
 
 ### Versione 1.5
 
@@ -525,4 +550,4 @@ Usata per feedback testuali in punti salienti:
 ---
 
 _Documento generato per utilizzo con claude-code_
-_Versione: 1.5_
+_Versione: 1.6_

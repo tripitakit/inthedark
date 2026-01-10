@@ -73,6 +73,12 @@ export class Movement {
         }
       }
 
+      // Feedback presenza oggetto nel nuovo nodo
+      const node = graphWorld.getNode(targetNode);
+      if (node?.item && !node.item.collected) {
+        audioEngine.playItemPresence();
+      }
+
       console.log(`Movimento: ${currentNode} → ${targetNode} (${direction})`);
       this.gameState.debugLog();
 

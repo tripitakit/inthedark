@@ -97,6 +97,11 @@ async function startGame(): Promise<void> {
   gameScreen.classList.add('active');
   updateStatus();
 
+  // Feedback presenza oggetto nel nodo iniziale
+  if (startNode?.item && !startNode.item.collected) {
+    audioEngine.playItemPresence();
+  }
+
   console.log('Gioco avviato! Usa le frecce per muoverti.');
 }
 

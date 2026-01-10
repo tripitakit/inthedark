@@ -362,6 +362,70 @@ export class AudioEngine {
     osc.start(now);
     osc.stop(now + 0.2);
   }
+
+  /**
+   * Riproduce suono "shimmer" per indicare presenza oggetto nel nodo
+   * Arpeggio delicato con note alte: 800Hz, 1000Hz, 1200Hz
+   */
+  playItemPresence(): void {
+    if (!this.context || !this.masterGain) return;
+
+    const now = this.context.currentTime;
+    const notes = [800, 1000, 1200];
+    const noteDuration = 0.12;
+    const noteGap = 0.05;
+
+    for (let i = 0; i < notes.length; i++) {
+      const startTime = now + i * (noteDuration + noteGap);
+
+      const osc = this.context.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = notes[i];
+
+      const gain = this.context.createGain();
+      gain.gain.setValueAtTime(0, startTime);
+      gain.gain.linearRampToValueAtTime(0.15, startTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.01, startTime + noteDuration);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.start(startTime);
+      osc.stop(startTime + noteDuration);
+    }
+  }
+
+  /**
+   * Riproduce suono "vuoto/hollow" per pickup fallito
+   * Tono basso sordo che indica "niente qui"
+   */
+  playEmptyPickup(): void {
+    if (!this.context || !this.masterGain) return;
+
+    const now = this.context.currentTime;
+
+    // Tono basso sordo
+    const osc = this.context.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(100, now);
+    osc.frequency.exponentialRampToValueAtTime(70, now + 0.15);
+
+    // Filtro passa-basso per suono più ovattato
+    const filter = this.context.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 200;
+
+    const gain = this.context.createGain();
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.masterGain);
+
+    osc.start(now);
+    osc.stop(now + 0.15);
+  }
 }
 
 // Singleton instance

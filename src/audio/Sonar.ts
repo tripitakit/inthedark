@@ -50,8 +50,17 @@ export class Sonar {
     const orientation = this.gameState.orientation;
     const currentNode = this.gameState.currentNode;
 
-    // Verifica se c'è un passaggio nella direzione frontale
-    const hasPassageAhead = this.graphWorld.getConnection(currentNode, orientation) !== null;
+    // Verifica se c'è un passaggio accessibile nella direzione frontale
+    const targetNode = this.graphWorld.getConnection(currentNode, orientation);
+    let hasPassageAhead = targetNode !== null;
+
+    // Se c'è connessione, verifica se è bloccata da lock
+    if (hasPassageAhead && targetNode) {
+      const lock = this.graphWorld.getLock(currentNode, orientation);
+      if (lock && !this.gameState.isPassageUnlocked(lock.id)) {
+        hasPassageAhead = false; // Passaggio bloccato = muro
+      }
+    }
 
     // 1. Tono bussola (immediato)
     this.audioEngine.playCompassTone(orientation);

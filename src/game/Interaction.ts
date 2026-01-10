@@ -46,7 +46,8 @@ export class Interaction {
       return useResult;
     }
 
-    // Nessuna interazione disponibile
+    // Nessuna interazione disponibile - feedback audio
+    audioEngine.playEmptyPickup();
     return {
       type: 'nothing',
       message: 'Nessuna interazione disponibile',
