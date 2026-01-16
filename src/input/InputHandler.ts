@@ -192,14 +192,8 @@ export class InputHandler {
     const enabled = this.roomNarrator.toggle();
     this.onNarrationToggle?.(enabled);
 
-    // Play a feedback sound
-    if (enabled) {
-      // Play a positive sound when enabling
-      audioEngine.playUnlock();
-    } else {
-      // Play a neutral sound when disabling
-      audioEngine.playError();
-    }
+    // Speak the new state
+    audioEngine.speakToggle('Narration', enabled);
   }
 
   /**

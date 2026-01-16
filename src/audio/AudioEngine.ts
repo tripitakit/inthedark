@@ -269,6 +269,53 @@ export class AudioEngine {
   }
 
   /**
+   * Speaks a toggle state change (e.g., "Narration on" or "Narration off")
+   */
+  speakToggle(feature: string, enabled: boolean): void {
+    if (!('speechSynthesis' in window)) {
+      return;
+    }
+
+    const text = `${feature} ${enabled ? 'on' : 'off'}`;
+    const utterance = new SpeechSynthesisUtterance(text);
+
+    utterance.rate = 0.95;
+    utterance.pitch = 0.5;
+    utterance.volume = 1.0;
+    utterance.lang = 'en-US';
+
+    // Try to select an English male voice
+    const voices = speechSynthesis.getVoices();
+    const preferredMaleVoices = [
+      'Microsoft David', 'Daniel', 'Alex', 'Google UK English Male',
+      'Microsoft Mark', 'Thomas'
+    ];
+
+    let selectedVoice: SpeechSynthesisVoice | undefined;
+    for (const name of preferredMaleVoices) {
+      selectedVoice = voices.find((v) => v.name.includes(name));
+      if (selectedVoice) break;
+    }
+
+    if (!selectedVoice) {
+      const englishVoices = voices.filter(
+        (v) => v.lang.startsWith('en-') || v.lang.startsWith('en_')
+      );
+      selectedVoice = englishVoices.find(
+        (v) => v.name.toLowerCase().includes('male') && !v.name.toLowerCase().includes('female')
+      ) || englishVoices.find(
+        (v) => !v.name.toLowerCase().includes('female')
+      ) || englishVoices[0];
+    }
+
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+    }
+
+    speechSynthesis.speak(utterance);
+  }
+
+  /**
    * Riproduce il ping del sonar (suono emesso dal giocatore)
    * Suono breve e distintivo che "parte" dal giocatore
    */
