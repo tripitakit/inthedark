@@ -49,9 +49,62 @@
       display: none;
     }
 
-    #status {
-      font-size: 1rem;
-      opacity: 0.6;
+    /* Minimap */
+    #minimap {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 100;
+    }
+
+    .minimap-wrapper {
+      position: relative;
+    }
+
+    .minimap-node {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      background: #222;
+      position: absolute;
+    }
+
+    .minimap-node.visited {
+      background: #444;
+    }
+
+    .minimap-node.current {
+      background: #0af;
+      box-shadow: 0 0 8px #0af;
+    }
+
+    .minimap-node.unknown {
+      background: #111;
+      opacity: 0.3;
+    }
+
+    .minimap-node.has-item::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 8px;
+      height: 8px;
+      background: #fc0;
+      border-radius: 50%;
+    }
+
+    /* Connessioni come elementi separati */
+    .minimap-conn {
+      position: absolute;
+      background: #666;
+      border-radius: 1px;
+    }
+
+    .minimap-conn.locked {
+      background: #f44;
     }
   </style>
 </head>
@@ -62,8 +115,9 @@
   </div>
 
   <div id="game-screen">
-    <p id="status">Gioco attivo - usa le frecce per muoverti</p>
   </div>
+
+  <div id="minimap"></div>
 
   <script type="module" src="/src/main.ts"></script>
 </body>

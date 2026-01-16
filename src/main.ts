@@ -6,6 +6,7 @@ import { graphWorld } from './game/GraphWorld';
 import { Movement } from './game/Movement';
 import { Interaction } from './game/Interaction';
 import { InputHandler } from './input/InputHandler';
+import { Minimap } from './ui/Minimap';
 import testLevel from './data/levels/test-level.json';
 import type { LevelData } from './types';
 
@@ -25,25 +26,21 @@ function getRequiredElement(id: string): HTMLElement {
 
 const startScreen = getRequiredElement('start-screen');
 const gameScreen = getRequiredElement('game-screen');
-const statusElement = getRequiredElement('status');
+const minimapElement = getRequiredElement('minimap');
 
 // Stato globale
 let gameState: GameState;
 let movement: Movement;
 let inputHandler: InputHandler;
+let minimap: Minimap;
 
 /**
- * Aggiorna lo stato visualizzato
+ * Aggiorna la UI (minimap)
  */
-function updateStatus(): void {
-  if (!gameState || !movement) return;
-
-  const node = graphWorld.getNode(gameState.currentNode);
-  const nodeName = node?.name ?? gameState.currentNode;
-  const orientation = movement.getOrientationLabel();
-  const heldItem = gameState.heldItem?.id ?? 'nessuno';
-
-  statusElement.textContent = `${nodeName} | Orientamento: ${orientation} | Oggetto: ${heldItem}`;
+function updateUI(): void {
+  if (minimap) {
+    minimap.render();
+  }
 }
 
 /**
@@ -87,15 +84,19 @@ async function startGame(): Promise<void> {
   // Inizializza sistema interazione
   const interaction = new Interaction(gameState, graphWorld);
 
+  // Inizializza minimap
+  minimap = new Minimap(minimapElement, graphWorld, gameState);
+
   // Inizializza input handler con callback per aggiornare UI
-  inputHandler = new InputHandler(movement, updateStatus);
+  inputHandler = new InputHandler(movement, updateUI);
   inputHandler.setInteraction(interaction);
+  inputHandler.setMinimap(minimap);
   inputHandler.enable();
 
   // Aggiorna UI
   startScreen.classList.add('hidden');
   gameScreen.classList.add('active');
-  updateStatus();
+  updateUI();
 
   // Feedback presenza oggetto nel nodo iniziale
   if (startNode?.item && !startNode.item.collected) {

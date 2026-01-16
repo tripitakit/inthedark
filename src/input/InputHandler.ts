@@ -1,5 +1,6 @@
 import { Movement } from '../game/Movement';
 import type { Interaction } from '../game/Interaction';
+import type { Minimap } from '../ui/Minimap';
 
 /**
  * InputHandler - Gestisce gli input da tastiera
@@ -7,6 +8,7 @@ import type { Interaction } from '../game/Interaction';
 export class InputHandler {
   private movement: Movement;
   private interaction: Interaction | null = null;
+  private minimap: Minimap | null = null;
   private onAction?: () => void;
   private enabled: boolean = false;
   private isMoving: boolean = false; // Previene input durante movimento
@@ -21,6 +23,13 @@ export class InputHandler {
    */
   setInteraction(interaction: Interaction): void {
     this.interaction = interaction;
+  }
+
+  /**
+   * Imposta l'istanza Minimap da usare
+   */
+  setMinimap(minimap: Minimap): void {
+    this.minimap = minimap;
   }
 
   /**
@@ -79,6 +88,14 @@ export class InputHandler {
           this.interaction.interact();
         }
         this.onAction?.();
+        break;
+
+      case 'm':
+      case 'M':
+        event.preventDefault();
+        if (this.minimap) {
+          this.minimap.toggle();
+        }
         break;
     }
   };

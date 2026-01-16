@@ -13,6 +13,7 @@ export class GameState {
       heldItem: null,
       unlockedPassages: [],
       visitedNodes: [startNode],
+      discoveredEdges: [],
     };
   }
 
@@ -83,6 +84,23 @@ export class GameState {
    */
   isPassageUnlocked(lockId: string): boolean {
     return this.state.unlockedPassages.includes(lockId);
+  }
+
+  /**
+   * Scopre un edge (corridoio) dal nodo corrente in una direzione
+   */
+  discoverEdge(nodeId: string, direction: Direction): void {
+    const edgeKey = `${nodeId}:${direction}`;
+    if (!this.state.discoveredEdges.includes(edgeKey)) {
+      this.state.discoveredEdges.push(edgeKey);
+    }
+  }
+
+  /**
+   * Verifica se un edge è stato scoperto
+   */
+  isEdgeDiscovered(nodeId: string, direction: Direction): boolean {
+    return this.state.discoveredEdges.includes(`${nodeId}:${direction}`);
   }
 
   /**

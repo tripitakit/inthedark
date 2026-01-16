@@ -1,13 +1,63 @@
 import type { Direction } from '../types';
 
-// Frequenze bussola per ogni direzione cardinale
-// Nord/Sud = Do (C) a un'ottava di distanza
-// Est/Ovest = Sol (G) a un'ottava di distanza
-const COMPASS_FREQUENCIES: Record<Direction, number> = {
-  north: 523, // C5 (Do alto)
-  south: 262, // C4 (Do basso)
-  east: 784,  // G5 (Sol alto)
-  west: 392,  // G4 (Sol basso)
+// Configurazione bussola per ogni direzione cardinale
+// Frequenze: Nord/Sud = Do (C), Est/Ovest = Sol (G)
+// Timbri, filtri e detune: diversi per massima distinguibilità
+interface CompassConfig {
+  frequency: number;
+  waveform: OscillatorType;
+  detuneCents?: number; // Se presente, crea secondo oscillatore detuned
+  duration?: number;    // Durata in secondi (default 0.3)
+  gain?: number;        // Volume base (default 0.2, o 0.15 se detune)
+  filter: {
+    type: BiquadFilterType;
+    Q: number;
+    // Envelope: array di [time, frequency] dove time è relativo (0-1)
+    envelope: [number, number][];
+  };
+}
+
+const COMPASS_CONFIG: Record<Direction, CompassConfig> = {
+  north: {
+    frequency: 523,           // C5
+    waveform: 'sine',         // puro, etereo
+    detuneCents: 8,           // secondo osc per battimenti
+    duration: 0.45,           // più lungo
+    gain: 0.19,               // +25% rispetto a 0.15
+    filter: {
+      type: 'bandpass',
+      Q: 8,
+      envelope: [[0, 400], [0.4, 1200], [1, 600]],  // "wah" etereo
+    },
+  },
+  south: {
+    frequency: 262,           // C4
+    waveform: 'square',       // cavo, profondo
+    filter: {
+      type: 'lowpass',
+      Q: 4,
+      envelope: [[0, 2500], [1, 200]],  // chiusura drammatica
+    },
+  },
+  east: {
+    frequency: 784,           // G5
+    waveform: 'triangle',     // caldo, luminoso
+    detuneCents: 6,           // secondo osc per spessore
+    filter: {
+      type: 'highpass',
+      Q: 3,
+      envelope: [[0, 200], [1, 1500]],  // apertura luminosa
+    },
+  },
+  west: {
+    frequency: 392,           // G4
+    waveform: 'sawtooth',     // ronzante
+    filter: {
+      type: 'lowpass',
+      Q: 3,
+      envelope: [[0, 1800], [0.4, 500], [1, 1400]],  // dip - "tramonto"
+    },
+  },
 };
 
 /**
@@ -156,28 +206,60 @@ export class AudioEngine {
 
   /**
    * Riproduce tono bussola per direzione
+   * Ogni direzione ha frequenza, timbro e envelope filtro distintivi
    */
   playCompassTone(direction: Direction): void {
     if (!this.context || !this.masterGain) return;
 
     const now = this.context.currentTime;
+    const config = COMPASS_CONFIG[direction];
+    const duration = config.duration ?? 0.3;
 
-    const frequency = COMPASS_FREQUENCIES[direction];
+    // Filtro con envelope
+    const filter = this.context.createBiquadFilter();
+    filter.type = config.filter.type;
+    filter.Q.value = config.filter.Q;
 
-    const osc = this.context.createOscillator();
-    osc.type = 'triangle';
-    osc.frequency.value = frequency;
+    // Applica envelope al cutoff del filtro
+    for (const [time, freq] of config.filter.envelope) {
+      const absoluteTime = now + time * duration;
+      if (time === 0) {
+        filter.frequency.setValueAtTime(freq, absoluteTime);
+      } else {
+        filter.frequency.linearRampToValueAtTime(freq, absoluteTime);
+      }
+    }
 
+    // Gain envelope
     const gain = this.context.createGain();
-    gain.gain.setValueAtTime(0.2, now);
-    gain.gain.setValueAtTime(0.2, now + 0.15);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+    const defaultGain = config.detuneCents ? 0.15 : 0.2;
+    const baseGain = config.gain ?? defaultGain;
+    gain.gain.setValueAtTime(baseGain, now);
+    gain.gain.setValueAtTime(baseGain, now + duration * 0.5);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
 
-    osc.connect(gain);
+    // Connessioni: filter → gain → master
+    filter.connect(gain);
     gain.connect(this.masterGain);
 
-    osc.start(now);
-    osc.stop(now + 0.3);
+    // Oscillatore principale
+    const osc1 = this.context.createOscillator();
+    osc1.type = config.waveform;
+    osc1.frequency.value = config.frequency;
+    osc1.connect(filter);
+    osc1.start(now);
+    osc1.stop(now + duration);
+
+    // Secondo oscillatore detuned (se configurato)
+    if (config.detuneCents) {
+      const osc2 = this.context.createOscillator();
+      osc2.type = config.waveform;
+      osc2.frequency.value = config.frequency;
+      osc2.detune.value = config.detuneCents;
+      osc2.connect(filter);
+      osc2.start(now);
+      osc2.stop(now + duration);
+    }
   }
 
   /**
@@ -425,6 +507,49 @@ export class AudioEngine {
 
     osc.start(now);
     osc.stop(now + 0.15);
+  }
+
+  /**
+   * Riproduce suono "serratura" per indicare presenza lock nel sonar
+   * Suono metallico tipo catena/lucchetto che tintinna
+   */
+  playLockPresence(): void {
+    if (!this.context || !this.masterGain) return;
+
+    const now = this.context.currentTime;
+
+    // Tono metallico alto (simula catena)
+    const osc1 = this.context.createOscillator();
+    osc1.type = 'square';
+    osc1.frequency.setValueAtTime(1800, now);
+    osc1.frequency.exponentialRampToValueAtTime(1200, now + 0.08);
+
+    // Secondo tono leggermente sfasato (battimenti metallici)
+    const osc2 = this.context.createOscillator();
+    osc2.type = 'square';
+    osc2.frequency.setValueAtTime(1850, now);
+    osc2.frequency.exponentialRampToValueAtTime(1250, now + 0.08);
+
+    // Filtro passa-banda per suono metallico
+    const filter = this.context.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = 1500;
+    filter.Q.value = 5;
+
+    // Gain con decay rapido
+    const gain = this.context.createGain();
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+
+    osc1.connect(filter);
+    osc2.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.masterGain);
+
+    osc1.start(now);
+    osc1.stop(now + 0.12);
+    osc2.start(now);
+    osc2.stop(now + 0.12);
   }
 }
 

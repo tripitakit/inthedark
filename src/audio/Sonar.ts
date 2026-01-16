@@ -8,6 +8,7 @@ const TIMING = {
   PING_DELAY: 350,         // Delay prima del ping
   ECHO_WALL_DELAY: 150,    // Eco breve = muro vicino (no passaggio)
   ECHO_PASSAGE_DELAY: 450, // Eco lungo = spazio aperto (passaggio)
+  LOCK_SOUND_DELAY: 100,   // Delay dopo eco per suono serratura
 };
 
 /**
@@ -39,6 +40,7 @@ export class Sonar {
    * 1. Tono bussola (direzione corrente)
    * 2. Ping di andata
    * 3. Eco di ritorno (solo frontale)
+   * 4. Suono serratura (se presente lock chiuso)
    */
   activate(): void {
     const context = this.audioEngine.getContext();
@@ -50,15 +52,20 @@ export class Sonar {
     const orientation = this.gameState.orientation;
     const currentNode = this.gameState.currentNode;
 
-    // Verifica se c'è un passaggio accessibile nella direzione frontale
+    // Verifica se c'è un passaggio e se c'è una serratura
     const targetNode = this.graphWorld.getConnection(currentNode, orientation);
     let hasPassageAhead = targetNode !== null;
+    let hasLockedDoor = false;
 
     // Se c'è connessione, verifica se è bloccata da lock
     if (hasPassageAhead && targetNode) {
+      // Scopri l'edge sulla minimap
+      this.gameState.discoverEdge(currentNode, orientation);
+
       const lock = this.graphWorld.getLock(currentNode, orientation);
       if (lock && !this.gameState.isPassageUnlocked(lock.id)) {
         hasPassageAhead = false; // Passaggio bloccato = muro
+        hasLockedDoor = true;    // Ma c'è una serratura
       }
     }
 
@@ -79,9 +86,18 @@ export class Sonar {
       this.audioEngine.playEchoFiltered(hasPassageAhead);
     }, TIMING.PING_DELAY + echoDelay);
 
+    // 4. Suono serratura (se c'è lock chiuso)
+    if (hasLockedDoor) {
+      setTimeout(() => {
+        this.audioEngine.playLockPresence();
+      }, TIMING.PING_DELAY + echoDelay + TIMING.LOCK_SOUND_DELAY);
+    }
+
     // Log per debug
     if (hasPassageAhead) {
       console.log(`Sonar: ${orientation} - passaggio aperto (eco lento)`);
+    } else if (hasLockedDoor) {
+      console.log(`Sonar: ${orientation} - serratura chiusa (eco veloce + lock)`);
     } else {
       console.log(`Sonar: ${orientation} - muro (eco veloce)`);
     }

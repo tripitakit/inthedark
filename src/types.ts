@@ -64,6 +64,7 @@ export interface PlayerState {
   heldItem: GameItem | null;
   unlockedPassages: string[];
   visitedNodes: string[];
+  discoveredEdges: string[]; // Formato: "nodeId:direction"
 }
 
 // Definizione livello
