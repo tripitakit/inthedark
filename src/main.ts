@@ -1,10 +1,12 @@
 import { audioEngine } from './audio/AudioEngine';
 import { Sonar } from './audio/Sonar';
 import { AmbienceManager } from './audio/AmbienceManager';
+import { RoomNarrator } from './audio/RoomNarrator';
 import { GameState } from './game/GameState';
 import { graphWorld } from './game/GraphWorld';
 import { Movement } from './game/Movement';
 import { Interaction } from './game/Interaction';
+import { HintSystem } from './game/HintSystem';
 import { InputHandler } from './input/InputHandler';
 import { Minimap } from './ui/Minimap';
 import { InventoryUI } from './ui/InventoryUI';
@@ -34,6 +36,7 @@ const controlsHelpElement = getRequiredElement('controls-help');
 const roomInfoElement = getRequiredElement('room-info');
 const btnNewGame = getRequiredElement('btn-new-game') as HTMLButtonElement;
 const btnLoadGame = getRequiredElement('btn-load-game') as HTMLButtonElement;
+const voiceNarrationCheckbox = getRequiredElement('voice-narration') as HTMLInputElement;
 
 // Global state
 let gameState: GameState;
@@ -42,6 +45,7 @@ let inputHandler: InputHandler;
 let minimap: Minimap;
 let inventoryUI: InventoryUI;
 let roomInfoUI: RoomInfoUI;
+let roomNarrator: RoomNarrator;
 
 /**
  * Updates all UI components
@@ -97,6 +101,13 @@ async function initializeGame(state: GameState, saveData?: SaveData): Promise<vo
   // Initialize interaction system
   const interaction = new Interaction(gameState, graphWorld);
 
+  // Initialize hint system
+  const hintSystem = new HintSystem(gameState, audioEngine);
+
+  // Initialize room narrator with checkbox state
+  const narrationEnabled = voiceNarrationCheckbox.checked;
+  roomNarrator = new RoomNarrator(audioEngine, narrationEnabled);
+
   // Initialize minimap
   minimap = new Minimap(minimapElement, graphWorld, gameState);
 
@@ -110,19 +121,54 @@ async function initializeGame(state: GameState, saveData?: SaveData): Promise<vo
   inputHandler = new InputHandler(movement, updateUI);
   inputHandler.setInteraction(interaction);
   inputHandler.setGameState(gameState);
+  inputHandler.setHintSystem(hintSystem);
+  inputHandler.setRoomNarrator(roomNarrator);
   inputHandler.setOnSave(handleSaveGame);
+  inputHandler.setOnNarrationToggle((enabled) => {
+    voiceNarrationCheckbox.checked = enabled;
+  });
   inputHandler.enable();
+
+  // Set up room change listener for narration
+  gameState.onRoomChange((newRoomId) => {
+    const node = graphWorld.getNode(newRoomId);
+    if (node?.description) {
+      const roomName = node.name || newRoomId;
+      roomNarrator.narrateRoom(
+        newRoomId,
+        roomName,
+        gameState.orientation,
+        node.description
+      );
+    }
+  });
 
   // Update UI and show game screen
   startScreen.classList.add('hidden');
   gameScreen.classList.add('active');
   controlsHelpElement.classList.add('active');
+  inventoryElement.classList.add('active');
   roomInfoUI.setVisible(true);
   updateUI();
 
   // Item presence feedback in starting room (only for new game)
   if (!saveData && currentNode?.item && !currentNode.item.collected) {
     audioEngine.playItemPresence();
+  }
+
+  // Narrate starting room if enabled (with a small delay to let audio init)
+  if (narrationEnabled && currentNode?.description) {
+    const startRoomName = currentNode.name || gameState.currentNode;
+    const startDescription = currentNode.description;
+    setTimeout(() => {
+      roomNarrator.narrateRoom(
+        gameState.currentNode,
+        startRoomName,
+        gameState.orientation,
+        startDescription,
+        true
+      );
+    }, 500);
   }
 
   console.log('Game initialized!');

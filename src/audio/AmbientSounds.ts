@@ -1922,6 +1922,834 @@ class EtherealMusic extends BaseAmbientGenerator {
   }
 }
 
+// ========================================
+// GENERATORI TEMPIO ANTICO
+// ========================================
+
+/**
+ * StoneEcho - Eco di pietra con riverbero lungo
+ *
+ * Noise burst occasionali con decay 2-4s per simulare eco in stanze di pietra
+ */
+class StoneEcho extends BaseAmbientGenerator {
+  private nextEchoTimeout: number | null = null;
+
+  constructor(context: AudioContext) {
+    super(context, 0.1);
+  }
+
+  start(): void {
+    if (this.isPlaying) return;
+    this.isPlaying = true;
+    this.scheduleEcho();
+  }
+
+  stop(): void {
+    this.isPlaying = false;
+    if (this.nextEchoTimeout !== null) {
+      clearTimeout(this.nextEchoTimeout);
+      this.nextEchoTimeout = null;
+    }
+  }
+
+  private scheduleEcho(): void {
+    if (!this.isPlaying) return;
+    this.playEcho();
+    const delay = 4000 + Math.random() * 6000;
+    this.nextEchoTimeout = window.setTimeout(() => this.scheduleEcho(), delay);
+  }
+
+  private playEcho(): void {
+    const now = this.context.currentTime;
+    const duration = 2 + Math.random() * 2; // 2-4 seconds decay
+
+    const bufferSize = Math.floor(this.context.sampleRate * 0.08);
+    const buffer = this.context.createBuffer(1, bufferSize, this.context.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / bufferSize * 4);
+    }
+
+    const source = this.context.createBufferSource();
+    source.buffer = buffer;
+
+    // Stone-like bandpass filter
+    const filter = this.context.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = 300 + Math.random() * 300;
+    filter.Q.value = 2;
+
+    const gain = this.context.createGain();
+    gain.gain.setValueAtTime(0.35, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+
+    source.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.output);
+
+    source.start(now);
+    source.stop(now + duration);
+  }
+}
+
+/**
+ * ChantingWhisper - Voci cantanti distanti
+ *
+ * Formant synthesis con intervalli atonali per atmosfera mistica
+ */
+class ChantingWhisper extends BaseAmbientGenerator {
+  private nextChantTimeout: number | null = null;
+
+  constructor(context: AudioContext) {
+    super(context, 0.08);
+  }
+
+  start(): void {
+    if (this.isPlaying) return;
+    this.isPlaying = true;
+    this.scheduleChant();
+  }
+
+  stop(): void {
+    this.isPlaying = false;
+    if (this.nextChantTimeout !== null) {
+      clearTimeout(this.nextChantTimeout);
+      this.nextChantTimeout = null;
+    }
+  }
+
+  private scheduleChant(): void {
+    if (!this.isPlaying) return;
+    this.playChant();
+    const delay = 3000 + Math.random() * 5000;
+    this.nextChantTimeout = window.setTimeout(() => this.scheduleChant(), delay);
+  }
+
+  private playChant(): void {
+    const now = this.context.currentTime;
+    const duration = 1.5 + Math.random() * 1.5;
+
+    // Atonal formant frequencies
+    const formants = [250, 600, 1200, 2400];
+    const baseFreq = 100 + Math.random() * 50;
+
+    const source = this.context.createOscillator();
+    source.type = 'sawtooth';
+    source.frequency.setValueAtTime(baseFreq, now);
+    source.frequency.linearRampToValueAtTime(baseFreq * 0.9, now + duration);
+
+    const masterGain = this.context.createGain();
+    masterGain.gain.setValueAtTime(0, now);
+    masterGain.gain.linearRampToValueAtTime(0.15, now + 0.3);
+    masterGain.gain.setValueAtTime(0.15, now + duration - 0.3);
+    masterGain.gain.linearRampToValueAtTime(0.01, now + duration);
+
+    for (const freq of formants) {
+      const filter = this.context.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.value = freq * (0.85 + Math.random() * 0.3);
+      filter.Q.value = 12;
+
+      const formantGain = this.context.createGain();
+      formantGain.gain.value = 0.2;
+
+      source.connect(filter);
+      filter.connect(formantGain);
+      formantGain.connect(masterGain);
+    }
+
+    masterGain.connect(this.output);
+
+    source.start(now);
+    source.stop(now + duration);
+  }
+}
+
+/**
+ * CorridorWind - Vento nei corridoi
+ *
+ * Pink noise filtrato basso (100-400Hz) con LFO lento per effetto sinistro
+ */
+class CorridorWind extends BaseAmbientGenerator {
+  private noiseSource: AudioBufferSourceNode | null = null;
+  private lfo: OscillatorNode | null = null;
+  private noiseBuffer: AudioBuffer | null = null;
+
+  constructor(context: AudioContext) {
+    super(context, 0.18);
+    this.noiseBuffer = createPinkNoiseBuffer(context, 10);
+  }
+
+  start(): void {
+    if (this.isPlaying) return;
+    this.isPlaying = true;
+
+    const now = this.context.currentTime;
+
+    this.noiseSource = this.context.createBufferSource();
+    this.noiseSource.buffer = this.noiseBuffer;
+    this.noiseSource.loop = true;
+
+    // Low bandpass for eerie corridor wind
+    const filter = this.context.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = 200;
+    filter.Q.value = 1;
+
+    // Slow LFO for movement
+    this.lfo = this.context.createOscillator();
+    this.lfo.type = 'sine';
+    this.lfo.frequency.value = 0.06;
+
+    const lfoGain = this.context.createGain();
+    lfoGain.gain.value = 0.35;
+
+    const windGain = this.context.createGain();
+    windGain.gain.value = 0.65;
+
+    const lfoToFilter = this.context.createGain();
+    lfoToFilter.gain.value = 100;
+
+    this.lfo.connect(lfoGain);
+    lfoGain.connect(windGain.gain);
+
+    this.lfo.connect(lfoToFilter);
+    lfoToFilter.connect(filter.frequency);
+
+    this.noiseSource.connect(filter);
+    filter.connect(windGain);
+    windGain.connect(this.output);
+
+    this.noiseSource.start(now);
+    this.lfo.start(now);
+  }
+
+  stop(): void {
+    if (!this.isPlaying) return;
+    this.isPlaying = false;
+
+    const now = this.context.currentTime;
+
+    if (this.noiseSource) {
+      this.noiseSource.stop(now);
+      this.noiseSource = null;
+    }
+    if (this.lfo) {
+      this.lfo.stop(now);
+      this.lfo = null;
+    }
+  }
+}
+
+/**
+ * RitualBells - Campane rituali
+ *
+ * Sine 400-800Hz con lungo decay per risonanza metallica occasionale
+ */
+class RitualBells extends BaseAmbientGenerator {
+  private nextBellTimeout: number | null = null;
+
+  constructor(context: AudioContext) {
+    super(context, 0.12);
+  }
+
+  start(): void {
+    if (this.isPlaying) return;
+    this.isPlaying = true;
+    this.scheduleBell();
+  }
+
+  stop(): void {
+    this.isPlaying = false;
+    if (this.nextBellTimeout !== null) {
+      clearTimeout(this.nextBellTimeout);
+      this.nextBellTimeout = null;
+    }
+  }
+
+  private scheduleBell(): void {
+    if (!this.isPlaying) return;
+    this.playBell();
+    const delay = 6000 + Math.random() * 10000;
+    this.nextBellTimeout = window.setTimeout(() => this.scheduleBell(), delay);
+  }
+
+  private playBell(): void {
+    const now = this.context.currentTime;
+    const baseFreq = 400 + Math.random() * 400;
+    const duration = 2 + Math.random() * 1.5;
+
+    // Main bell tone
+    const osc1 = this.context.createOscillator();
+    osc1.type = 'sine';
+    osc1.frequency.value = baseFreq;
+
+    // Overtone
+    const osc2 = this.context.createOscillator();
+    osc2.type = 'sine';
+    osc2.frequency.value = baseFreq * 2.4;
+
+    // Third partial
+    const osc3 = this.context.createOscillator();
+    osc3.type = 'sine';
+    osc3.frequency.value = baseFreq * 5.4;
+
+    const gain1 = this.context.createGain();
+    gain1.gain.setValueAtTime(0.25, now);
+    gain1.gain.exponentialRampToValueAtTime(0.01, now + duration);
+
+    const gain2 = this.context.createGain();
+    gain2.gain.setValueAtTime(0.12, now);
+    gain2.gain.exponentialRampToValueAtTime(0.01, now + duration * 0.7);
+
+    const gain3 = this.context.createGain();
+    gain3.gain.setValueAtTime(0.06, now);
+    gain3.gain.exponentialRampToValueAtTime(0.01, now + duration * 0.4);
+
+    osc1.connect(gain1);
+    osc2.connect(gain2);
+    osc3.connect(gain3);
+    gain1.connect(this.output);
+    gain2.connect(this.output);
+    gain3.connect(this.output);
+
+    osc1.start(now);
+    osc2.start(now);
+    osc3.start(now);
+    osc1.stop(now + duration);
+    osc2.stop(now + duration * 0.7);
+    osc3.stop(now + duration * 0.4);
+  }
+}
+
+/**
+ * AncientHum - Energia antica del tempio
+ *
+ * 40Hz base con armonici alieni per atmosfera mistica tecnologica
+ */
+class AncientHum extends BaseAmbientGenerator {
+  private oscillators: OscillatorNode[] = [];
+  private lfo: OscillatorNode | null = null;
+
+  constructor(context: AudioContext) {
+    super(context, 0.15);
+  }
+
+  start(): void {
+    if (this.isPlaying) return;
+    this.isPlaying = true;
+
+    const now = this.context.currentTime;
+    const baseFreq = 40;
+
+    // Ancient non-standard harmonics
+    const harmonics = [1, 1.618, 2.618, 4.236]; // Golden ratio based
+
+    for (const h of harmonics) {
+      const osc = this.context.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = baseFreq * h;
+
+      const gain = this.context.createGain();
+      gain.gain.value = 0.15 / h;
+
+      osc.connect(gain);
+      gain.connect(this.output);
+
+      osc.start(now);
+      this.oscillators.push(osc);
+    }
+
+    // Slow pulsation LFO
+    this.lfo = this.context.createOscillator();
+    this.lfo.type = 'sine';
+    this.lfo.frequency.value = 0.08;
+
+    const lfoGain = this.context.createGain();
+    lfoGain.gain.value = 0.25;
+
+    this.lfo.connect(lfoGain);
+    lfoGain.connect(this.output.gain);
+
+    this.lfo.start(now);
+  }
+
+  stop(): void {
+    if (!this.isPlaying) return;
+    this.isPlaying = false;
+
+    const now = this.context.currentTime;
+
+    for (const osc of this.oscillators) {
+      osc.stop(now);
+    }
+    this.oscillators = [];
+
+    if (this.lfo) {
+      this.lfo.stop(now);
+      this.lfo = null;
+    }
+  }
+}
+
+/**
+ * StoneDrip - Gocce su pietra
+ *
+ * Simile a WaterDrip ma con pitch più alto e risonanza per superficie di pietra
+ */
+class StoneDrip extends BaseAmbientGenerator {
+  private nextDripTimeout: number | null = null;
+
+  constructor(context: AudioContext) {
+    super(context, 0.25);
+  }
+
+  start(): void {
+    if (this.isPlaying) return;
+    this.isPlaying = true;
+    this.scheduleDrip();
+  }
+
+  stop(): void {
+    this.isPlaying = false;
+    if (this.nextDripTimeout !== null) {
+      clearTimeout(this.nextDripTimeout);
+      this.nextDripTimeout = null;
+    }
+  }
+
+  private scheduleDrip(): void {
+    if (!this.isPlaying) return;
+    this.playDrip();
+    const delay = 800 + Math.random() * 3000;
+    this.nextDripTimeout = window.setTimeout(() => this.scheduleDrip(), delay);
+  }
+
+  private playDrip(): void {
+    const now = this.context.currentTime;
+    const duration = 0.04 + Math.random() * 0.03;
+
+    const bufferSize = Math.floor(this.context.sampleRate * duration);
+    const buffer = this.context.createBuffer(1, bufferSize, this.context.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    for (let i = 0; i < bufferSize; i++) {
+      const t = i / bufferSize;
+      const envelope = Math.exp(-t * 25);
+      data[i] = (Math.random() * 2 - 1) * envelope;
+    }
+
+    const source = this.context.createBufferSource();
+    source.buffer = buffer;
+
+    // Higher pitched filter for stone resonance
+    const filter = this.context.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = 2000 + Math.random() * 2000;
+    filter.Q.value = 15;
+
+    const gain = this.context.createGain();
+    gain.gain.setValueAtTime(0.4 + Math.random() * 0.4, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + duration * 2);
+
+    source.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.output);
+
+    source.start(now);
+    source.stop(now + duration * 2);
+  }
+}
+
+// ========================================
+// GENERATORI REGNO CELESTE
+// ========================================
+
+/**
+ * CrystalHarmonic - Armonici cristallini
+ *
+ * Multiple sine detuned per letto tonale costante e celestiale
+ */
+class CrystalHarmonic extends BaseAmbientGenerator {
+  private oscillators: OscillatorNode[] = [];
+
+  constructor(context: AudioContext) {
+    super(context, 0.08);
+  }
+
+  start(): void {
+    if (this.isPlaying) return;
+    this.isPlaying = true;
+
+    const now = this.context.currentTime;
+
+    // Crystal frequencies with slight detuning
+    const baseFreqs = [880, 1100, 1320, 1760, 2200];
+    const detune = [-8, 3, -5, 7, -3];
+
+    for (let i = 0; i < baseFreqs.length; i++) {
+      const osc = this.context.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = baseFreqs[i];
+      osc.detune.value = detune[i];
+
+      const gain = this.context.createGain();
+      gain.gain.value = 0.08 - i * 0.01;
+
+      osc.connect(gain);
+      gain.connect(this.output);
+
+      osc.start(now);
+      this.oscillators.push(osc);
+    }
+  }
+
+  stop(): void {
+    if (!this.isPlaying) return;
+    this.isPlaying = false;
+
+    const now = this.context.currentTime;
+
+    for (const osc of this.oscillators) {
+      osc.stop(now);
+    }
+    this.oscillators = [];
+  }
+}
+
+/**
+ * VoidWhisper - Sussurri del vuoto
+ *
+ * Formant invertiti molto quieti per voci incomprensibili
+ */
+class VoidWhisper extends BaseAmbientGenerator {
+  private nextWhisperTimeout: number | null = null;
+
+  constructor(context: AudioContext) {
+    super(context, 0.05);
+  }
+
+  start(): void {
+    if (this.isPlaying) return;
+    this.isPlaying = true;
+    this.scheduleWhisper();
+  }
+
+  stop(): void {
+    this.isPlaying = false;
+    if (this.nextWhisperTimeout !== null) {
+      clearTimeout(this.nextWhisperTimeout);
+      this.nextWhisperTimeout = null;
+    }
+  }
+
+  private scheduleWhisper(): void {
+    if (!this.isPlaying) return;
+    this.playWhisper();
+    const delay = 5000 + Math.random() * 8000;
+    this.nextWhisperTimeout = window.setTimeout(() => this.scheduleWhisper(), delay);
+  }
+
+  private playWhisper(): void {
+    const now = this.context.currentTime;
+    const duration = 1 + Math.random() * 1.5;
+
+    // Reversed formant effect - high to low
+    const source = this.context.createOscillator();
+    source.type = 'sawtooth';
+    source.frequency.setValueAtTime(150, now);
+    source.frequency.linearRampToValueAtTime(80, now + duration);
+
+    const filter1 = this.context.createBiquadFilter();
+    filter1.type = 'bandpass';
+    filter1.frequency.setValueAtTime(2000, now);
+    filter1.frequency.linearRampToValueAtTime(400, now + duration);
+    filter1.Q.value = 8;
+
+    const filter2 = this.context.createBiquadFilter();
+    filter2.type = 'bandpass';
+    filter2.frequency.setValueAtTime(1200, now);
+    filter2.frequency.linearRampToValueAtTime(200, now + duration);
+    filter2.Q.value = 6;
+
+    const masterGain = this.context.createGain();
+    masterGain.gain.setValueAtTime(0, now);
+    masterGain.gain.linearRampToValueAtTime(0.12, now + 0.2);
+    masterGain.gain.setValueAtTime(0.12, now + duration - 0.3);
+    masterGain.gain.linearRampToValueAtTime(0.01, now + duration);
+
+    source.connect(filter1);
+    source.connect(filter2);
+    filter1.connect(masterGain);
+    filter2.connect(masterGain);
+    masterGain.connect(this.output);
+
+    source.start(now);
+    source.stop(now + duration);
+  }
+}
+
+/**
+ * EnergyStream - Flusso di energia
+ *
+ * Sweep filtrato 200-1000Hz per effetto energia direzionale
+ */
+class EnergyStream extends BaseAmbientGenerator {
+  private noiseSource: AudioBufferSourceNode | null = null;
+  private lfo: OscillatorNode | null = null;
+  private noiseBuffer: AudioBuffer | null = null;
+
+  constructor(context: AudioContext) {
+    super(context, 0.12);
+    this.noiseBuffer = createPinkNoiseBuffer(context, 10);
+  }
+
+  start(): void {
+    if (this.isPlaying) return;
+    this.isPlaying = true;
+
+    const now = this.context.currentTime;
+
+    this.noiseSource = this.context.createBufferSource();
+    this.noiseSource.buffer = this.noiseBuffer;
+    this.noiseSource.loop = true;
+
+    const filter = this.context.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = 500;
+    filter.Q.value = 2;
+
+    // LFO sweeps the filter
+    this.lfo = this.context.createOscillator();
+    this.lfo.type = 'triangle';
+    this.lfo.frequency.value = 0.15;
+
+    const lfoToFilter = this.context.createGain();
+    lfoToFilter.gain.value = 350;
+
+    const streamGain = this.context.createGain();
+    streamGain.gain.value = 0.6;
+
+    this.lfo.connect(lfoToFilter);
+    lfoToFilter.connect(filter.frequency);
+
+    this.noiseSource.connect(filter);
+    filter.connect(streamGain);
+    streamGain.connect(this.output);
+
+    this.noiseSource.start(now);
+    this.lfo.start(now);
+  }
+
+  stop(): void {
+    if (!this.isPlaying) return;
+    this.isPlaying = false;
+
+    const now = this.context.currentTime;
+
+    if (this.noiseSource) {
+      this.noiseSource.stop(now);
+      this.noiseSource = null;
+    }
+    if (this.lfo) {
+      this.lfo.stop(now);
+      this.lfo = null;
+    }
+  }
+}
+
+/**
+ * CosmicPulse - Pulsazioni cosmiche
+ *
+ * 20-40Hz pulsazioni profonde con ciclo 4-8s
+ */
+class CosmicPulse extends BaseAmbientGenerator {
+  private oscillator: OscillatorNode | null = null;
+  private lfo: OscillatorNode | null = null;
+
+  constructor(context: AudioContext) {
+    super(context, 0.18);
+  }
+
+  start(): void {
+    if (this.isPlaying) return;
+    this.isPlaying = true;
+
+    const now = this.context.currentTime;
+
+    this.oscillator = this.context.createOscillator();
+    this.oscillator.type = 'sine';
+    this.oscillator.frequency.value = 30;
+
+    // Very slow LFO for cosmic rhythm
+    this.lfo = this.context.createOscillator();
+    this.lfo.type = 'sine';
+    this.lfo.frequency.value = 0.15; // ~6-7 second cycle
+
+    const lfoToFreq = this.context.createGain();
+    lfoToFreq.gain.value = 10; // 20-40Hz range
+
+    const lfoToGain = this.context.createGain();
+    lfoToGain.gain.value = 0.4;
+
+    const pulseGain = this.context.createGain();
+    pulseGain.gain.value = 0.6;
+
+    this.lfo.connect(lfoToFreq);
+    lfoToFreq.connect(this.oscillator.frequency);
+
+    this.lfo.connect(lfoToGain);
+    lfoToGain.connect(pulseGain.gain);
+
+    this.oscillator.connect(pulseGain);
+    pulseGain.connect(this.output);
+
+    this.oscillator.start(now);
+    this.lfo.start(now);
+  }
+
+  stop(): void {
+    if (!this.isPlaying) return;
+    this.isPlaying = false;
+
+    const now = this.context.currentTime;
+
+    if (this.oscillator) {
+      this.oscillator.stop(now);
+      this.oscillator = null;
+    }
+    if (this.lfo) {
+      this.lfo.stop(now);
+      this.lfo = null;
+    }
+  }
+}
+
+/**
+ * HarmonicResonance - Risonanza armonica ultraterrena
+ *
+ * Intervalli non standard per atmosfera celestiale aliena
+ */
+class HarmonicResonance extends BaseAmbientGenerator {
+  private oscillators: OscillatorNode[] = [];
+  private lfo: OscillatorNode | null = null;
+
+  constructor(context: AudioContext) {
+    super(context, 0.1);
+  }
+
+  start(): void {
+    if (this.isPlaying) return;
+    this.isPlaying = true;
+
+    const now = this.context.currentTime;
+
+    // Non-standard harmonic series (microtonal)
+    const frequencies = [220, 293, 366, 440, 550, 660];
+
+    for (const freq of frequencies) {
+      const osc = this.context.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+
+      const gain = this.context.createGain();
+      gain.gain.value = 0.06;
+
+      osc.connect(gain);
+      gain.connect(this.output);
+
+      osc.start(now);
+      this.oscillators.push(osc);
+    }
+
+    // Slow shimmer
+    this.lfo = this.context.createOscillator();
+    this.lfo.type = 'sine';
+    this.lfo.frequency.value = 0.05;
+
+    const lfoGain = this.context.createGain();
+    lfoGain.gain.value = 0.15;
+
+    this.lfo.connect(lfoGain);
+    lfoGain.connect(this.output.gain);
+
+    this.lfo.start(now);
+  }
+
+  stop(): void {
+    if (!this.isPlaying) return;
+    this.isPlaying = false;
+
+    const now = this.context.currentTime;
+
+    for (const osc of this.oscillators) {
+      osc.stop(now);
+    }
+    this.oscillators = [];
+
+    if (this.lfo) {
+      this.lfo.stop(now);
+      this.lfo = null;
+    }
+  }
+}
+
+/**
+ * EtherealShimmer - Scintillio etereo
+ *
+ * Alte frequenze (3000-8000Hz) per effetto scintillante celestiale
+ */
+class EtherealShimmer extends BaseAmbientGenerator {
+  private nextShimmerTimeout: number | null = null;
+
+  constructor(context: AudioContext) {
+    super(context, 0.06);
+  }
+
+  start(): void {
+    if (this.isPlaying) return;
+    this.isPlaying = true;
+    this.scheduleShimmer();
+  }
+
+  stop(): void {
+    this.isPlaying = false;
+    if (this.nextShimmerTimeout !== null) {
+      clearTimeout(this.nextShimmerTimeout);
+      this.nextShimmerTimeout = null;
+    }
+  }
+
+  private scheduleShimmer(): void {
+    if (!this.isPlaying) return;
+    this.playShimmer();
+    const delay = 200 + Math.random() * 400;
+    this.nextShimmerTimeout = window.setTimeout(() => this.scheduleShimmer(), delay);
+  }
+
+  private playShimmer(): void {
+    const now = this.context.currentTime;
+    const freq = 3000 + Math.random() * 5000;
+    const duration = 0.1 + Math.random() * 0.15;
+
+    const osc = this.context.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+
+    const gain = this.context.createGain();
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.08 + Math.random() * 0.06, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+
+    osc.connect(gain);
+    gain.connect(this.output);
+
+    osc.start(now);
+    osc.stop(now + duration);
+  }
+}
+
 /**
  * Factory function to create ambient generators
  */
@@ -1986,6 +2814,32 @@ export function createAmbientGenerator(
       return new AlienVoice(context);
     case 'etherealMusic':
       return new EtherealMusic(context);
+    // Temple
+    case 'stoneEcho':
+      return new StoneEcho(context);
+    case 'chantingWhisper':
+      return new ChantingWhisper(context);
+    case 'corridorWind':
+      return new CorridorWind(context);
+    case 'ritualBells':
+      return new RitualBells(context);
+    case 'ancientHum':
+      return new AncientHum(context);
+    case 'stoneDrip':
+      return new StoneDrip(context);
+    // Celestial
+    case 'crystalHarmonic':
+      return new CrystalHarmonic(context);
+    case 'voidWhisper':
+      return new VoidWhisper(context);
+    case 'energyStream':
+      return new EnergyStream(context);
+    case 'cosmicPulse':
+      return new CosmicPulse(context);
+    case 'harmonicResonance':
+      return new HarmonicResonance(context);
+    case 'etherealShimmer':
+      return new EtherealShimmer(context);
     // Fallback
     default:
       console.warn(`Generator '${type}' not implemented, using wind as fallback`);

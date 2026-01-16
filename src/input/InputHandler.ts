@@ -2,6 +2,8 @@ import { Movement } from '../game/Movement';
 import { audioEngine } from '../audio/AudioEngine';
 import type { GameState } from '../game/GameState';
 import type { Interaction } from '../game/Interaction';
+import type { HintSystem } from '../game/HintSystem';
+import type { RoomNarrator } from '../audio/RoomNarrator';
 
 /**
  * InputHandler - Gestisce gli input da tastiera
@@ -10,9 +12,12 @@ export class InputHandler {
   private movement: Movement;
   private gameState: GameState | null = null;
   private interaction: Interaction | null = null;
+  private hintSystem: HintSystem | null = null;
+  private roomNarrator: RoomNarrator | null = null;
   private onAction?: () => void;
   private onSave?: () => void;
   private onInventoryChange?: (itemId: string | null) => void;
+  private onNarrationToggle?: (enabled: boolean) => void;
   private enabled: boolean = false;
   private isMoving: boolean = false; // Previene input durante movimento
 
@@ -43,10 +48,31 @@ export class InputHandler {
   }
 
   /**
+   * Set the HintSystem instance
+   */
+  setHintSystem(hintSystem: HintSystem): void {
+    this.hintSystem = hintSystem;
+  }
+
+  /**
+   * Set the RoomNarrator instance
+   */
+  setRoomNarrator(roomNarrator: RoomNarrator): void {
+    this.roomNarrator = roomNarrator;
+  }
+
+  /**
    * Callback quando cambia oggetto selezionato nell'inventario
    */
   setOnInventoryChange(callback: (itemId: string | null) => void): void {
     this.onInventoryChange = callback;
+  }
+
+  /**
+   * Callback when narration is toggled
+   */
+  setOnNarrationToggle(callback: (enabled: boolean) => void): void {
+    this.onNarrationToggle = callback;
   }
 
   /**
@@ -123,8 +149,58 @@ export class InputHandler {
         event.preventDefault();
         this.onSave?.();
         break;
+
+      case 'h':
+      case 'H':
+        event.preventDefault();
+        this.requestHint();
+        break;
+
+      case 'p':
+      case 'P':
+        event.preventDefault();
+        this.toggleNarration();
+        break;
     }
   };
+
+  /**
+   * Request a hint from the hint system
+   */
+  private async requestHint(): Promise<void> {
+    if (!this.hintSystem) {
+      console.log('HintSystem not available');
+      return;
+    }
+
+    const hintProvided = await this.hintSystem.requestHint();
+    if (!hintProvided) {
+      // Play cooldown sound or nothing
+      audioEngine.playError();
+    }
+  }
+
+  /**
+   * Toggle room narration on/off
+   */
+  private toggleNarration(): void {
+    if (!this.roomNarrator) {
+      console.log('RoomNarrator not available');
+      return;
+    }
+
+    const enabled = this.roomNarrator.toggle();
+    this.onNarrationToggle?.(enabled);
+
+    // Play a feedback sound
+    if (enabled) {
+      // Play a positive sound when enabling
+      audioEngine.playUnlock();
+    } else {
+      // Play a neutral sound when disabling
+      audioEngine.playError();
+    }
+  }
 
   /**
    * Cicla tra gli oggetti dell'inventario (solo oggetti raccolti)

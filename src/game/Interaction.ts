@@ -3,6 +3,28 @@ import { GameState } from './GameState';
 import { GraphWorld } from './GraphWorld';
 import { audioEngine } from '../audio/AudioEngine';
 
+// Display names for items (converts snake_case IDs to readable names)
+const ITEM_NAMES: Record<string, string> = {
+  lantern: 'lantern',
+  knife: 'knife',
+  blue_gem: 'blue gem',
+  rope: 'rope',
+  alien_crystal: 'alien crystal',
+  fuel_cell: 'fuel cell',
+  power_cell: 'power cell',
+  activation_key: 'activation key',
+  ritual_bell: 'ritual bell',
+  offering_chalice: 'offering chalice',
+  stone_tablet: 'stone tablet',
+  monk_medallion: 'monk medallion',
+  crystal_shard: 'crystal shard',
+  harmonic_key: 'harmonic key',
+  void_essence: 'void essence',
+  cosmic_sigil: 'cosmic sigil',
+  memory_fragment: 'memory fragment',
+  starlight_core: 'starlight core',
+};
+
 /**
  * Risultato di un'interazione
  */
@@ -75,11 +97,18 @@ export class Interaction {
     item.collected = true;
     this.gameState.addToInventory(item);
 
-    // Feedback audio: pickup generico + firma sonora dell'oggetto
+    // Feedback audio: pickup generico + firma sonora dell'oggetto + voice
     audioEngine.playPickup();
     setTimeout(() => {
       audioEngine.playItemSignature(item.soundSignature);
     }, 150); // Piccolo delay per separare i suoni
+
+    // Voice narration after item signature sound
+    const itemName = ITEM_NAMES[item.id] || item.id.replace(/_/g, ' ');
+    setTimeout(() => {
+      audioEngine.speakPickup(itemName);
+    }, 600); // After signature sound finishes
+
     console.log(`Raccolto: ${item.id} (inventario: ${this.gameState.inventory.length})`);
 
     return {
@@ -91,6 +120,7 @@ export class Interaction {
 
   /**
    * Tenta di usare l'oggetto selezionato su un lock nella direzione corrente
+   * Supporta sia lock singoli che multi-item locks
    */
   private tryUseItem(): InteractionResult {
     const selectedItem = this.gameState.selectedItem;
@@ -112,7 +142,12 @@ export class Interaction {
       return { type: 'nothing', message: '' };
     }
 
-    // Verifica se l'oggetto è quello giusto
+    // Check if this is a multi-item lock
+    if (lock.requiredItem2) {
+      return this.tryMultiItemUnlock(lock, selectedItem);
+    }
+
+    // Single-item lock: verify the object is correct
     if (lock.requiredItem !== selectedItem.id) {
       audioEngine.playError();
       return {
@@ -144,5 +179,89 @@ export class Interaction {
       message: `Hai sbloccato il passaggio con ${selectedItem.id}`,
       item: selectedItem,
     };
+  }
+
+  /**
+   * Handles multi-item lock attempts
+   * Requires player to have BOTH required items in inventory
+   */
+  private tryMultiItemUnlock(lock: { id: string; requiredItem: string; requiredItem2?: string; unlocks: string }, selectedItem: GameItem): InteractionResult {
+    // Check if player has both required items
+    const hasItem1 = this.gameState.hasItem(lock.requiredItem);
+    const hasItem2 = lock.requiredItem2 ? this.gameState.hasItem(lock.requiredItem2) : false;
+
+    // If selected item is one of the required items
+    const isValidItem = selectedItem.id === lock.requiredItem || selectedItem.id === lock.requiredItem2;
+
+    if (!isValidItem) {
+      audioEngine.playError();
+      return {
+        type: 'error',
+        message: 'Questo oggetto non funziona qui',
+      };
+    }
+
+    // Check if we have both items
+    if (!hasItem1 || !hasItem2) {
+      // Play a different sound to indicate partial progress
+      audioEngine.playItemPresence(); // Hint that something more is needed
+      return {
+        type: 'error',
+        message: 'Serve qualcosa in più...',
+      };
+    }
+
+    // We have both items - unlock and remove both
+    this.gameState.unlockPassage(lock.id);
+
+    // Remove both items from inventory (find and remove by ID)
+    this.removeItemById(lock.requiredItem);
+    if (lock.requiredItem2) {
+      this.removeItemById(lock.requiredItem2);
+    }
+
+    // Check for victory condition
+    if (lock.unlocks === 'victory') {
+      console.log('=== VITTORIA! Transcendenza raggiunta! ===');
+      audioEngine.playLaunchSequence();
+      return {
+        type: 'victory',
+        message: 'Hai raggiunto la transcendenza!',
+        item: selectedItem,
+      };
+    }
+
+    audioEngine.playUnlock();
+    console.log(`Sbloccato: ${lock.id} con ${lock.requiredItem} + ${lock.requiredItem2}`);
+
+    return {
+      type: 'unlock',
+      message: `Hai combinato ${lock.requiredItem} e ${lock.requiredItem2}!`,
+      item: selectedItem,
+    };
+  }
+
+  /**
+   * Helper to remove an item from inventory by ID
+   */
+  private removeItemById(itemId: string): void {
+    const inventory = this.gameState.inventory;
+    const index = inventory.findIndex(item => item.id === itemId);
+    if (index !== -1) {
+      // We need to select this item first, then remove it
+      // This is a workaround since GameState only has removeSelectedItem
+      const currentSelected = this.gameState.selectedIndex;
+
+      // Temporarily select the item to remove
+      while (this.gameState.selectedIndex !== index && this.gameState.inventory.length > 0) {
+        this.gameState.selectNext();
+        // Prevent infinite loop
+        if (this.gameState.selectedIndex === currentSelected) break;
+      }
+
+      if (this.gameState.selectedIndex === index) {
+        this.gameState.removeSelectedItem();
+      }
+    }
   }
 }

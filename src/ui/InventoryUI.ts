@@ -3,35 +3,61 @@ import type { GameItem } from '../types';
 
 // Icons for each item type
 const ITEM_ICONS: Record<string, string> = {
-  lanterna: '🔦',
-  coltello: '🔪',
-  corda: '🪢',
-  gemma_blu: '💎',
-  cristallo_alieno: '🔮',
+  // Original items
+  lantern: '🔦',
+  knife: '🔪',
+  rope: '🪢',
+  blue_gem: '💎',
+  alien_crystal: '🔮',
   power_cell: '🔋',
   fuel_cell: '⛽',
   activation_key: '🔑',
+  // Temple items
+  ritual_bell: '🔔',
+  stone_tablet: '🪨',
+  monk_medallion: '📿',
+  offering_chalice: '🏆',
+  // Celestial items
+  crystal_shard: '💠',
+  void_essence: '🌑',
+  memory_fragment: '🧠',
+  harmonic_key: '🎵',
+  starlight_core: '⭐',
+  cosmic_sigil: '✴️',
 };
 
 // English names for items
 const ITEM_NAMES: Record<string, string> = {
-  lanterna: 'Lantern',
-  coltello: 'Knife',
-  corda: 'Rope',
-  gemma_blu: 'Blue Gem',
-  cristallo_alieno: 'Alien Crystal',
+  // Original items
+  lantern: 'Lantern',
+  knife: 'Knife',
+  rope: 'Rope',
+  blue_gem: 'Blue Gem',
+  alien_crystal: 'Crystal',
   power_cell: 'Power Cell',
   fuel_cell: 'Fuel Cell',
   activation_key: 'Act. Key',
+  // Temple items
+  ritual_bell: 'Bell',
+  stone_tablet: 'Tablet',
+  monk_medallion: 'Medallion',
+  offering_chalice: 'Chalice',
+  // Celestial items
+  crystal_shard: 'Shard',
+  void_essence: 'Void',
+  memory_fragment: 'Memory',
+  harmonic_key: 'Harmonic',
+  starlight_core: 'Starlight',
+  cosmic_sigil: 'Sigil',
 };
 
-// Maximum inventory slots displayed
-const MAX_SLOTS = 8;
+// Maximum inventory slots displayed (expanded for new zones)
+const MAX_SLOTS = 12;
 
 /**
  * InventoryUI - Gestisce la visualizzazione dell'inventario
  *
- * Mostra fino a 8 slot numerati con:
+ * Mostra fino a 12 slot numerati con:
  * - Icona dell'oggetto
  * - Nome abbreviato
  * - Evidenziazione dello slot selezionato

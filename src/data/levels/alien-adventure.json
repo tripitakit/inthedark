@@ -1,13 +1,13 @@
 {
   "id": "alien-adventure",
-  "name": "In The Dark - Risveglio Alieno",
+  "name": "In The Dark - Alien Awakening",
   "startNode": "forest_start",
   "startOrientation": "north",
   "nodes": [
     {
       "id": "forest_start",
-      "name": "Inizio Sentiero",
-      "description": "Ti risvegli in una foresta. Un sentiero si apre verso nord.",
+      "name": "Forest Trail",
+      "description": "You awaken on damp earth in total darkness. Your eyes strain but see nothing—not even shadows. A familiar weight rests in your hand: your portable terminal. Its dim screen glows faintly. The map display shows your position in a forest trail. The infrared sensor AI whispers its analysis of the surroundings—pine trees, moss, the scent of damp soil. Press ENTER to activate the SONAR pulse and detect exits and objects around you. Something feels wrong. You don't remember how you got here.",
       "connections": {
         "north": "forest_path",
         "east": null,
@@ -26,8 +26,8 @@
     },
     {
       "id": "forest_path",
-      "name": "Sentiero Principale",
-      "description": "Un bivio nel bosco. Sentieri si aprono in tutte le direzioni.",
+      "name": "Forest Crossroads",
+      "description": "Leaves crunch underfoot. The wind carries whispers you cannot quite understand. This place feels ancient, as if the trees themselves are watching.",
       "connections": {
         "north": "forest_clearing",
         "east": "forest_stream",
@@ -46,8 +46,8 @@
     },
     {
       "id": "forest_clearing",
-      "name": "Radura",
-      "description": "Una piccola radura illuminata dalla luna. Qualcosa luccica per terra.",
+      "name": "Forest Clearing",
+      "description": "Silvery moonlight breaks through the canopy, bathing the clearing in an ethereal glow. The air feels lighter here. Something glimmers on the forest floor.",
       "connections": {
         "north": null,
         "east": null,
@@ -64,7 +64,7 @@
         ]
       },
       "item": {
-        "id": "lanterna",
+        "id": "lantern",
         "sound": "pickup",
         "soundSignature": "glassChime",
         "collected": false
@@ -72,8 +72,8 @@
     },
     {
       "id": "forest_thicket",
-      "name": "Boscaglia",
-      "description": "Rami intricati bloccano ogni direzione tranne est. Qualcosa di metallico riflette la luce.",
+      "name": "Dense Thicket",
+      "description": "Thorny brambles and twisted roots create a suffocating maze. The vegetation presses in from all sides. Something metallic catches your eye amid the undergrowth.",
       "connections": {
         "north": null,
         "east": "forest_path",
@@ -90,7 +90,7 @@
         ]
       },
       "item": {
-        "id": "coltello",
+        "id": "knife",
         "sound": "pickup",
         "soundSignature": "metalScrape",
         "collected": false
@@ -98,8 +98,8 @@
     },
     {
       "id": "forest_stream",
-      "name": "Ruscello",
-      "description": "Un ruscello scorre verso sud, dove si apre l'ingresso di una grotta.",
+      "name": "Forest Stream",
+      "description": "Cool water babbles over smooth stones, the sound almost melodic. The air grows humid and carries a mineral scent. You feel you're at the edge of two worlds.",
       "connections": {
         "north": null,
         "east": null,
@@ -119,8 +119,8 @@
     },
     {
       "id": "cave_entrance",
-      "name": "Ingresso Grotta",
-      "description": "L'ingresso di una grotta. L'aria si fa umida e fredda.",
+      "name": "Cave Entrance",
+      "description": "A raw opening in the earth swallows the light. Cold air rises from below, carrying the smell of wet stone. Your heartbeat echoes back at you.",
       "connections": {
         "north": "forest_stream",
         "east": null,
@@ -140,8 +140,8 @@
     },
     {
       "id": "cave_hall",
-      "name": "Sala della Grotta",
-      "description": "Una grande sala sotterranea. Il suono rimbomba sulle pareti.",
+      "name": "Cave Hall",
+      "description": "The ceiling vanishes into impenetrable darkness above. Distant drips punctuate the heavy silence. You feel incredibly small in this vast underground chamber.",
       "connections": {
         "north": "cave_entrance",
         "east": null,
@@ -161,8 +161,8 @@
     },
     {
       "id": "cave_crossroads",
-      "name": "Bivio Sotterraneo",
-      "description": "Un incrocio di tunnel. Passaggi si aprono in ogni direzione.",
+      "name": "Cave Junction",
+      "description": "Multiple tunnel mouths yawn in the darkness. The air currents shift unpredictably, carrying different scents from each direction. You must choose your path carefully.",
       "connections": {
         "north": "cave_hall",
         "east": "cave_tunnel",
@@ -182,8 +182,8 @@
     },
     {
       "id": "cave_pool",
-      "name": "Pozza Sotterranea",
-      "description": "Una pozza d'acqua cristallina. Una gemma blu luccica sul fondo.",
+      "name": "Underground Pool",
+      "description": "Still water reflects nothing—the pool is impossibly deep and dark. Yet at its bottom, a faint blue light pulses like a sleeping heart. The water is ice cold.",
       "connections": {
         "north": null,
         "east": "cave_crossroads",
@@ -200,7 +200,7 @@
         ]
       },
       "item": {
-        "id": "gemma_blu",
+        "id": "blue_gem",
         "sound": "pickup",
         "soundSignature": "crystalResonance",
         "collected": false
@@ -208,8 +208,8 @@
     },
     {
       "id": "cave_tunnel",
-      "name": "Cunicolo Stretto",
-      "description": "Un passaggio stretto. Una corda giace abbandonata per terra.",
+      "name": "Narrow Tunnel",
+      "description": "The walls press close, forcing you to squeeze through. Rough stone scrapes against your shoulders. Coiled on the ground, a forgotten rope suggests someone else passed this way.",
       "connections": {
         "north": null,
         "east": null,
@@ -226,7 +226,7 @@
         ]
       },
       "item": {
-        "id": "corda",
+        "id": "rope",
         "sound": "pickup",
         "soundSignature": "ropeSwish",
         "collected": false
@@ -234,8 +234,8 @@
     },
     {
       "id": "cave_chasm",
-      "name": "Voragine",
-      "description": "Un abisso si apre davanti a te. C'e' un passaggio dall'altra parte.",
+      "name": "Deep Chasm",
+      "description": "The floor ends abruptly at a terrifying void. When you drop a pebble, you never hear it land. A cold wind rises from the depths, carrying whispers of the unknown.",
       "connections": {
         "north": "cave_crossroads",
         "east": null,
@@ -254,7 +254,7 @@
       },
       "lock": {
         "id": "chasm_rope",
-        "requiredItem": "corda",
+        "requiredItem": "rope",
         "requiredSignature": "ropeSwish",
         "unlocks": "cave_chasm",
         "unlocked": false
@@ -262,8 +262,8 @@
     },
     {
       "id": "cave_deep",
-      "name": "Profondita'",
-      "description": "Le profondita' della grotta. Un cristallo alieno pulsa di luce strana.",
+      "name": "Cave Depths",
+      "description": "You've descended beyond any natural formation. The rock here has an unnatural smoothness, and a pulsing crystal casts strange shadows. This place was made by something not of this world.",
       "connections": {
         "north": "cave_chasm",
         "east": null,
@@ -281,7 +281,7 @@
         ]
       },
       "item": {
-        "id": "cristallo_alieno",
+        "id": "alien_crystal",
         "sound": "pickup",
         "soundSignature": "alienCrystal",
         "collected": false
@@ -289,8 +289,8 @@
     },
     {
       "id": "ship_airlock",
-      "name": "Camera Stagna",
-      "description": "Una camera stagna aliena. L'aria ha un odore metallico.",
+      "name": "Airlock Chamber",
+      "description": "Cold metal walls surround you, covered in symbols you cannot read. The air tastes of copper and ozone. You've entered something not built by human hands.",
       "connections": {
         "north": "cave_deep",
         "east": null,
@@ -309,7 +309,7 @@
       },
       "lock": {
         "id": "airlock_crystal",
-        "requiredItem": "cristallo_alieno",
+        "requiredItem": "alien_crystal",
         "requiredSignature": "alienCrystal",
         "unlocks": "ship_airlock",
         "unlocked": false
@@ -317,8 +317,8 @@
     },
     {
       "id": "ship_corridor",
-      "name": "Corridoio",
-      "description": "Un corridoio metallico. Pannelli dormiente fiancheggiano le pareti.",
+      "name": "Ship Corridor",
+      "description": "Your footsteps ring hollow on the metal floor. Dormant panels line the walls, their dark screens occasionally flickering with dying power. The ship sleeps, but not peacefully.",
       "connections": {
         "north": "ship_airlock",
         "east": "ship_secret",
@@ -338,8 +338,8 @@
     },
     {
       "id": "ship_secret",
-      "name": "Sala Ologrammi",
-      "description": "Una stanza segreta! Ologrammi alieni raccontano la storia della nave.",
+      "name": "Hologram Room",
+      "description": "Ghostly projections dance in the air—alien figures moving through scenes you cannot understand. Their civilization rose and fell before humanity existed. You are witness to forgotten history.",
       "connections": {
         "north": null,
         "east": null,
@@ -357,7 +357,7 @@
       },
       "lock": {
         "id": "secret_gem",
-        "requiredItem": "gemma_blu",
+        "requiredItem": "blue_gem",
         "requiredSignature": "crystalResonance",
         "unlocks": "ship_secret",
         "unlocked": false
@@ -365,8 +365,8 @@
     },
     {
       "id": "ship_bridge",
-      "name": "Ponte di Comando",
-      "description": "Il ponte di comando dell'astronave. Console dormono in attesa.",
+      "name": "Command Bridge",
+      "description": "A vast curved viewport reveals nothing but darkness. Consoles arranged in concentric circles await commands that may never come. Power hums beneath the floor, patient and hungry.",
       "connections": {
         "north": "ship_corridor",
         "east": "ship_reactor",
@@ -393,8 +393,8 @@
     },
     {
       "id": "ship_engineering",
-      "name": "Sala Motori",
-      "description": "La sala motori. Macchinari silenziosi attendono energia.",
+      "name": "Engine Room",
+      "description": "Massive engine cores hang suspended in magnetic fields, their surfaces covered in frost. The machinery here could reshape continents. It waits for the spark of life.",
       "connections": {
         "north": null,
         "east": "ship_bridge",
@@ -427,8 +427,8 @@
     },
     {
       "id": "ship_reactor",
-      "name": "Nucleo Reattore",
-      "description": "Il nucleo del reattore. Silenzioso e freddo, aspetta carburante.",
+      "name": "Reactor Core",
+      "description": "The heart of the ship lies dormant, a sphere of impossibly dense metal encased in crystalline shielding. Frost clings to every surface. When this awakens, nothing will be the same.",
       "connections": {
         "north": null,
         "east": null,
@@ -454,12 +454,12 @@
     },
     {
       "id": "ship_quarters",
-      "name": "Alloggi",
-      "description": "Gli alloggi dell'equipaggio. Una cella di carburante giace su un tavolo.",
+      "name": "Crew Quarters",
+      "description": "Personal effects lie scattered—possessions of beings long gone. Strange fabrics, incomprehensible tools, and containers of unknown substances. Someone left in a hurry, never to return.",
       "connections": {
         "north": "ship_bridge",
         "east": "ship_storage",
-        "south": null,
+        "south": "temple_entrance",
         "west": null
       },
       "ambience": {
@@ -481,8 +481,8 @@
     },
     {
       "id": "ship_storage",
-      "name": "Magazzino",
-      "description": "Il magazzino della nave. Una cella di energia emette un ronzio debole.",
+      "name": "Storage Bay",
+      "description": "Crates of strange alloys are stacked in precise rows. The air crackles with residual energy. Among the cargo, something still pulses with power—a forgotten treasure.",
       "connections": {
         "north": null,
         "east": null,
@@ -503,6 +503,691 @@
         "sound": "pickup",
         "soundSignature": "electricBuzz",
         "collected": false
+      }
+    },
+
+    {
+      "id": "temple_entrance",
+      "name": "Temple Entrance",
+      "description": "Weathered stone rises impossibly high, carved with symbols that predate language. The air is thick with incense and time. Something ancient stirs at your presence.",
+      "connections": {
+        "north": "ship_quarters",
+        "east": null,
+        "south": "temple_antechamber",
+        "west": null
+      },
+      "ambience": {
+        "type": "temple",
+        "reverbDecay": 3.5,
+        "reverbWet": 0.55,
+        "reverbCharacter": "stone",
+        "sounds": [
+          { "id": "wind1", "type": "corridorWind", "volume": 0.2 },
+          { "id": "echo1", "type": "stoneEcho", "volume": 0.15 }
+        ]
+      }
+    },
+    {
+      "id": "temple_antechamber",
+      "name": "Antechamber",
+      "description": "Faded murals cover the walls, depicting rituals you cannot comprehend. Your breath mists in the chill air. Distant chanting seems to rise and fall at the edge of hearing.",
+      "connections": {
+        "north": "temple_entrance",
+        "east": "temple_side_chapel",
+        "south": "temple_main_hall",
+        "west": "temple_offering_room"
+      },
+      "ambience": {
+        "type": "temple",
+        "reverbDecay": 4.0,
+        "reverbWet": 0.60,
+        "reverbCharacter": "stone",
+        "sounds": [
+          { "id": "drip1", "type": "stoneDrip", "volume": 0.18 },
+          { "id": "whisper1", "type": "chantingWhisper", "volume": 0.08 }
+        ]
+      }
+    },
+    {
+      "id": "temple_side_chapel",
+      "name": "Side Chapel",
+      "description": "Candle niches line the walls, their holders long cold. A stone altar dominates the space, and atop it rests a bell that seems to hum with anticipation.",
+      "connections": {
+        "north": null,
+        "east": null,
+        "south": null,
+        "west": "temple_antechamber"
+      },
+      "ambience": {
+        "type": "temple-chapel",
+        "reverbDecay": 3.8,
+        "reverbWet": 0.58,
+        "reverbCharacter": "stone",
+        "sounds": [
+          { "id": "bells1", "type": "ritualBells", "volume": 0.1 }
+        ]
+      },
+      "item": {
+        "id": "ritual_bell",
+        "sound": "pickup",
+        "soundSignature": "templeBell",
+        "collected": false
+      }
+    },
+    {
+      "id": "temple_offering_room",
+      "name": "Offering Room",
+      "description": "Offerings of bones and flowers lie scattered before a grand altar. A golden chalice catches the dim light, its surface etched with promises and warnings.",
+      "connections": {
+        "north": null,
+        "east": "temple_antechamber",
+        "south": null,
+        "west": null
+      },
+      "ambience": {
+        "type": "temple-offering",
+        "reverbDecay": 3.6,
+        "reverbWet": 0.55,
+        "reverbCharacter": "stone",
+        "sounds": [
+          { "id": "hum1", "type": "ancientHum", "volume": 0.12 }
+        ]
+      },
+      "item": {
+        "id": "offering_chalice",
+        "sound": "pickup",
+        "soundSignature": "chaliceRing",
+        "collected": false
+      }
+    },
+    {
+      "id": "temple_main_hall",
+      "name": "Main Hall",
+      "description": "Massive columns soar into shadows far above. Your voice returns to you multiplied, as if the hall itself is speaking. The weight of centuries presses down.",
+      "connections": {
+        "north": "temple_antechamber",
+        "east": "temple_library",
+        "south": "temple_sanctuary",
+        "west": "temple_crypt_stairs"
+      },
+      "ambience": {
+        "type": "temple-hall",
+        "reverbDecay": 4.5,
+        "reverbWet": 0.65,
+        "reverbCharacter": "stone",
+        "sounds": [
+          { "id": "echo1", "type": "stoneEcho", "volume": 0.2 },
+          { "id": "wind1", "type": "corridorWind", "volume": 0.15 },
+          { "id": "whisper1", "type": "chantingWhisper", "volume": 0.1 }
+        ]
+      }
+    },
+    {
+      "id": "temple_library",
+      "name": "Ancient Library",
+      "description": "Stone shelves sag under the weight of carved tablets—an entire civilization's knowledge preserved in stone. One tablet glows faintly, as if chosen for you alone.",
+      "connections": {
+        "north": "temple_observatory",
+        "east": null,
+        "south": null,
+        "west": "temple_main_hall"
+      },
+      "ambience": {
+        "type": "temple-library",
+        "reverbDecay": 3.2,
+        "reverbWet": 0.50,
+        "reverbCharacter": "stone",
+        "sounds": [
+          { "id": "drip1", "type": "stoneDrip", "volume": 0.1 }
+        ]
+      },
+      "item": {
+        "id": "stone_tablet",
+        "sound": "pickup",
+        "soundSignature": "stoneGrind",
+        "collected": false
+      }
+    },
+    {
+      "id": "temple_crypt_stairs",
+      "name": "Crypt Stairs",
+      "description": "Worn stone steps spiral downward, each one grooved by countless feet over millennia. The temperature drops with every step. The dead wait below.",
+      "connections": {
+        "north": null,
+        "east": "temple_main_hall",
+        "south": "temple_crypt",
+        "west": null
+      },
+      "ambience": {
+        "type": "temple-crypt",
+        "reverbDecay": 3.8,
+        "reverbWet": 0.58,
+        "reverbCharacter": "stone",
+        "sounds": [
+          { "id": "wind1", "type": "corridorWind", "volume": 0.22 },
+          { "id": "drip1", "type": "stoneDrip", "volume": 0.15 }
+        ]
+      }
+    },
+    {
+      "id": "temple_crypt",
+      "name": "Crypt",
+      "description": "Stone sarcophagi line the walls, their lids carved with serene faces. The air is still and ancient. You feel observed by those who have slept here for eons.",
+      "connections": {
+        "north": "temple_crypt_stairs",
+        "east": null,
+        "south": "temple_inner_sanctum",
+        "west": null
+      },
+      "ambience": {
+        "type": "temple-crypt",
+        "reverbDecay": 4.2,
+        "reverbWet": 0.62,
+        "reverbCharacter": "stone",
+        "sounds": [
+          { "id": "whisper1", "type": "chantingWhisper", "volume": 0.12 },
+          { "id": "drip1", "type": "stoneDrip", "volume": 0.1 }
+        ]
+      },
+      "lock": {
+        "id": "crypt_seal",
+        "requiredItem": "stone_tablet",
+        "requiredSignature": "stoneGrind",
+        "unlocks": "temple_crypt",
+        "unlocked": false
+      }
+    },
+    {
+      "id": "temple_sanctuary",
+      "name": "Sanctuary",
+      "description": "Golden light seems to emanate from nowhere, warming your skin. The anxiety you carried dissolves. This is a place of profound peace and terrible power.",
+      "connections": {
+        "north": "temple_main_hall",
+        "east": "temple_observatory",
+        "south": null,
+        "west": "temple_meditation"
+      },
+      "ambience": {
+        "type": "temple-sanctuary",
+        "reverbDecay": 4.0,
+        "reverbWet": 0.60,
+        "reverbCharacter": "stone",
+        "sounds": [
+          { "id": "bells1", "type": "ritualBells", "volume": 0.15 },
+          { "id": "hum1", "type": "ancientHum", "volume": 0.1 }
+        ]
+      },
+      "lock": {
+        "id": "sanctuary_seal",
+        "requiredItem": "ritual_bell",
+        "requiredSignature": "templeBell",
+        "unlocks": "temple_sanctuary",
+        "unlocked": false
+      }
+    },
+    {
+      "id": "temple_observatory",
+      "name": "Observatory",
+      "description": "Through carefully aligned openings, starlight streams onto a circular floor map. The ancient astronomers tracked celestial movements you cannot fathom. The cosmos watches you.",
+      "connections": {
+        "north": null,
+        "east": null,
+        "south": "temple_library",
+        "west": "temple_sanctuary"
+      },
+      "ambience": {
+        "type": "temple-observatory",
+        "reverbDecay": 3.5,
+        "reverbWet": 0.52,
+        "reverbCharacter": "stone",
+        "sounds": [
+          { "id": "wind1", "type": "corridorWind", "volume": 0.25 }
+        ]
+      }
+    },
+    {
+      "id": "temple_meditation",
+      "name": "Meditation Room",
+      "description": "Silence so profound you can hear your own blood flowing. Worn cushions suggest centuries of contemplation. A medallion lies abandoned, still warm to the touch.",
+      "connections": {
+        "north": null,
+        "east": "temple_sanctuary",
+        "south": null,
+        "west": null
+      },
+      "ambience": {
+        "type": "temple-meditation",
+        "reverbDecay": 3.0,
+        "reverbWet": 0.48,
+        "reverbCharacter": "stone",
+        "sounds": [
+          { "id": "hum1", "type": "ancientHum", "volume": 0.15 }
+        ]
+      },
+      "item": {
+        "id": "monk_medallion",
+        "sound": "pickup",
+        "soundSignature": "monkChant",
+        "collected": false
+      }
+    },
+    {
+      "id": "temple_inner_sanctum",
+      "name": "Inner Sanctum",
+      "description": "Reality feels thin here, as if the veil between worlds has worn away. Energy crackles at the edge of perception. The temple's true purpose reveals itself.",
+      "connections": {
+        "north": "temple_crypt",
+        "east": null,
+        "south": "temple_portal_room",
+        "west": null
+      },
+      "ambience": {
+        "type": "temple-sanctum",
+        "reverbDecay": 4.5,
+        "reverbWet": 0.68,
+        "reverbCharacter": "stone",
+        "sounds": [
+          { "id": "hum1", "type": "ancientHum", "volume": 0.2 },
+          { "id": "whisper1", "type": "chantingWhisper", "volume": 0.15 }
+        ]
+      },
+      "lock": {
+        "id": "inner_sanctum_seal",
+        "requiredItem": "monk_medallion",
+        "requiredSignature": "monkChant",
+        "unlocks": "temple_inner_sanctum",
+        "unlocked": false
+      }
+    },
+    {
+      "id": "temple_portal_room",
+      "name": "Portal Room",
+      "description": "A shimmering gateway hangs suspended in the air, its edges rippling like water. Two empty pedestals flank it, waiting for offerings. Beyond lies the unknown.",
+      "connections": {
+        "north": "temple_inner_sanctum",
+        "east": null,
+        "south": "celestial_arrival",
+        "west": null
+      },
+      "ambience": {
+        "type": "temple-portal",
+        "reverbDecay": 5.0,
+        "reverbWet": 0.70,
+        "reverbCharacter": "stone",
+        "sounds": [
+          { "id": "hum1", "type": "ancientHum", "volume": 0.25 },
+          { "id": "pulse1", "type": "cosmicPulse", "volume": 0.1 }
+        ]
+      },
+      "lock": {
+        "id": "portal_activation",
+        "requiredItem": "offering_chalice",
+        "requiredSignature": "chaliceRing",
+        "requiredItem2": "crystal_shard",
+        "requiredSignature2": "crystalHum",
+        "unlocks": "temple_portal_room",
+        "unlocked": false
+      }
+    },
+
+    {
+      "id": "celestial_arrival",
+      "name": "Celestial Arrival",
+      "description": "You emerge into impossible brightness. The ground beneath your feet glows like captured starlight. Gravity feels different here—lighter, almost welcoming. You have left the mortal world behind.",
+      "connections": {
+        "north": "temple_portal_room",
+        "east": null,
+        "south": "celestial_crossroads",
+        "west": null
+      },
+      "ambience": {
+        "type": "celestial",
+        "reverbDecay": 5.5,
+        "reverbWet": 0.75,
+        "reverbCharacter": "ethereal",
+        "sounds": [
+          { "id": "crystal1", "type": "crystalHarmonic", "volume": 0.2 },
+          { "id": "shimmer1", "type": "etherealShimmer", "volume": 0.15 }
+        ]
+      }
+    },
+    {
+      "id": "celestial_crossroads",
+      "name": "Celestial Crossroads",
+      "description": "Paths of crystallized light stretch in multiple directions, each humming with a different harmonic frequency. The air tastes of honey and static. Choose wisely—each road leads to revelation.",
+      "connections": {
+        "north": "celestial_arrival",
+        "east": "celestial_garden",
+        "south": "celestial_spire",
+        "west": "celestial_void_edge"
+      },
+      "ambience": {
+        "type": "celestial-crossroads",
+        "reverbDecay": 5.0,
+        "reverbWet": 0.72,
+        "reverbCharacter": "ethereal",
+        "sounds": [
+          { "id": "harmony1", "type": "harmonicResonance", "volume": 0.18 },
+          { "id": "stream1", "type": "energyStream", "volume": 0.12 }
+        ]
+      }
+    },
+    {
+      "id": "celestial_garden",
+      "name": "Crystal Garden",
+      "description": "Crystalline formations bloom like frozen flowers, each one singing a note you feel rather than hear. Colors shift through spectrums that have no names. One shard pulses with particular intensity.",
+      "connections": {
+        "north": "celestial_fountain",
+        "east": null,
+        "south": null,
+        "west": "celestial_crossroads"
+      },
+      "ambience": {
+        "type": "celestial-garden",
+        "reverbDecay": 4.5,
+        "reverbWet": 0.68,
+        "reverbCharacter": "ethereal",
+        "sounds": [
+          { "id": "crystal1", "type": "crystalHarmonic", "volume": 0.25 },
+          { "id": "shimmer1", "type": "etherealShimmer", "volume": 0.2 }
+        ]
+      },
+      "item": {
+        "id": "crystal_shard",
+        "sound": "pickup",
+        "soundSignature": "crystalHum",
+        "collected": false
+      }
+    },
+    {
+      "id": "celestial_fountain",
+      "name": "Harmony Fountain",
+      "description": "Light cascades upward in defiance of physics, pooling in mid-air before falling back down. The sound is music too perfect for mortal instruments. Something important floats within the radiance.",
+      "connections": {
+        "north": null,
+        "east": "celestial_memory_hall",
+        "south": "celestial_garden",
+        "west": null
+      },
+      "ambience": {
+        "type": "celestial-fountain",
+        "reverbDecay": 5.5,
+        "reverbWet": 0.78,
+        "reverbCharacter": "ethereal",
+        "sounds": [
+          { "id": "harmony1", "type": "harmonicResonance", "volume": 0.22 },
+          { "id": "stream1", "type": "energyStream", "volume": 0.18 }
+        ]
+      },
+      "item": {
+        "id": "harmonic_key",
+        "sound": "pickup",
+        "soundSignature": "harmonicTone",
+        "collected": false
+      }
+    },
+    {
+      "id": "celestial_void_edge",
+      "name": "Void Edge",
+      "description": "The realm ends here. Beyond stretches absolute nothing—not darkness, but absence. Standing at the precipice, you feel the pull of oblivion. Something precious hovers at the threshold.",
+      "connections": {
+        "north": "celestial_echo_chamber",
+        "east": "celestial_crossroads",
+        "south": null,
+        "west": null
+      },
+      "ambience": {
+        "type": "celestial-void",
+        "reverbDecay": 6.0,
+        "reverbWet": 0.80,
+        "reverbCharacter": "ethereal",
+        "sounds": [
+          { "id": "void1", "type": "voidWhisper", "volume": 0.2 },
+          { "id": "pulse1", "type": "cosmicPulse", "volume": 0.15 }
+        ]
+      },
+      "item": {
+        "id": "void_essence",
+        "sound": "pickup",
+        "soundSignature": "voidWhisper",
+        "collected": false
+      }
+    },
+    {
+      "id": "celestial_echo_chamber",
+      "name": "Echo Chamber",
+      "description": "Every sound you make returns to you transformed—whispers become choirs, footsteps become thunder. Echoes of ancient voices layer over each other, speaking truths from the beginning of time.",
+      "connections": {
+        "north": null,
+        "east": "celestial_spire",
+        "south": "celestial_void_edge",
+        "west": null
+      },
+      "ambience": {
+        "type": "celestial-echo",
+        "reverbDecay": 7.0,
+        "reverbWet": 0.85,
+        "reverbCharacter": "ethereal",
+        "sounds": [
+          { "id": "echo1", "type": "stoneEcho", "volume": 0.25 },
+          { "id": "harmony1", "type": "harmonicResonance", "volume": 0.15 }
+        ]
+      }
+    },
+    {
+      "id": "celestial_spire",
+      "name": "Celestial Spire",
+      "description": "A spiraling tower of pure light ascends beyond sight, its architecture defying comprehension. You stand at its base, feeling the weight of infinite knowledge pressing down from above.",
+      "connections": {
+        "north": "celestial_throne",
+        "east": "celestial_archive",
+        "south": "celestial_crossroads",
+        "west": "celestial_echo_chamber"
+      },
+      "ambience": {
+        "type": "celestial-spire",
+        "reverbDecay": 5.5,
+        "reverbWet": 0.75,
+        "reverbCharacter": "ethereal",
+        "sounds": [
+          { "id": "crystal1", "type": "crystalHarmonic", "volume": 0.2 },
+          { "id": "stream1", "type": "energyStream", "volume": 0.15 }
+        ]
+      }
+    },
+    {
+      "id": "celestial_archive",
+      "name": "Cosmic Archive",
+      "description": "Knowledge hangs in the air as visible threads of light, connecting concepts across eons. Every truth ever known is stored here. A sigil blazes with the fire of creation itself.",
+      "connections": {
+        "north": "celestial_memory_hall",
+        "east": null,
+        "south": null,
+        "west": "celestial_spire"
+      },
+      "ambience": {
+        "type": "celestial-archive",
+        "reverbDecay": 4.8,
+        "reverbWet": 0.70,
+        "reverbCharacter": "ethereal",
+        "sounds": [
+          { "id": "harmony1", "type": "harmonicResonance", "volume": 0.2 }
+        ]
+      },
+      "item": {
+        "id": "cosmic_sigil",
+        "sound": "pickup",
+        "soundSignature": "cosmicResonance",
+        "collected": false
+      },
+      "lock": {
+        "id": "archive_seal",
+        "requiredItem": "harmonic_key",
+        "requiredSignature": "harmonicTone",
+        "unlocks": "celestial_archive",
+        "unlocked": false
+      }
+    },
+    {
+      "id": "celestial_memory_hall",
+      "name": "Memory Hall",
+      "description": "Ghostly images drift through the air—moments from lives you never lived, loves you never knew. Your own memories mingle with the ancient. Something calls to you from the dreamlike haze.",
+      "connections": {
+        "north": null,
+        "east": null,
+        "south": "celestial_archive",
+        "west": "celestial_fountain"
+      },
+      "ambience": {
+        "type": "celestial-memory",
+        "reverbDecay": 6.0,
+        "reverbWet": 0.78,
+        "reverbCharacter": "ethereal",
+        "sounds": [
+          { "id": "void1", "type": "voidWhisper", "volume": 0.15 },
+          { "id": "shimmer1", "type": "etherealShimmer", "volume": 0.2 }
+        ]
+      },
+      "item": {
+        "id": "memory_fragment",
+        "sound": "pickup",
+        "soundSignature": "memoryEcho",
+        "collected": false
+      }
+    },
+    {
+      "id": "celestial_throne",
+      "name": "Throne Room",
+      "description": "A throne carved from a single beam of concentrated light dominates this celestial hall. Sitting here, you could reshape reality. Power beyond imagining waits to be claimed.",
+      "connections": {
+        "north": "celestial_transcendence",
+        "east": "celestial_bridge",
+        "south": "celestial_spire",
+        "west": "celestial_resonance"
+      },
+      "ambience": {
+        "type": "celestial-throne",
+        "reverbDecay": 5.8,
+        "reverbWet": 0.82,
+        "reverbCharacter": "ethereal",
+        "sounds": [
+          { "id": "pulse1", "type": "cosmicPulse", "volume": 0.2 },
+          { "id": "harmony1", "type": "harmonicResonance", "volume": 0.18 }
+        ]
+      }
+    },
+    {
+      "id": "celestial_bridge",
+      "name": "Bridge of Light",
+      "description": "A ribbon of solidified energy spans a chasm of stars. Each step sends ripples of light cascading into the void below. The bridge tests your faith in the impossible.",
+      "connections": {
+        "north": null,
+        "east": "celestial_oracle",
+        "south": null,
+        "west": "celestial_throne"
+      },
+      "ambience": {
+        "type": "celestial-bridge",
+        "reverbDecay": 5.2,
+        "reverbWet": 0.72,
+        "reverbCharacter": "ethereal",
+        "sounds": [
+          { "id": "stream1", "type": "energyStream", "volume": 0.25 },
+          { "id": "crystal1", "type": "crystalHarmonic", "volume": 0.15 }
+        ]
+      }
+    },
+    {
+      "id": "celestial_oracle",
+      "name": "Oracle Sanctum",
+      "description": "The oracle speaks in frequencies older than language. You understand without hearing, know without learning. At its heart, the essence of a dying star waits for a worthy vessel.",
+      "connections": {
+        "north": null,
+        "east": null,
+        "south": null,
+        "west": "celestial_bridge"
+      },
+      "ambience": {
+        "type": "celestial-oracle",
+        "reverbDecay": 6.5,
+        "reverbWet": 0.85,
+        "reverbCharacter": "ethereal",
+        "sounds": [
+          { "id": "void1", "type": "voidWhisper", "volume": 0.18 },
+          { "id": "harmony1", "type": "harmonicResonance", "volume": 0.22 }
+        ]
+      },
+      "item": {
+        "id": "starlight_core",
+        "sound": "pickup",
+        "soundSignature": "starlightPulse",
+        "collected": false
+      },
+      "lock": {
+        "id": "oracle_seal",
+        "requiredItem": "void_essence",
+        "requiredSignature": "voidWhisper",
+        "unlocks": "celestial_oracle",
+        "unlocked": false
+      }
+    },
+    {
+      "id": "celestial_resonance",
+      "name": "Resonance Chamber",
+      "description": "Invisible forces press against you from every direction—the confluence of cosmic rivers. Standing here feels like being inside a beating heart the size of galaxies.",
+      "connections": {
+        "north": null,
+        "east": "celestial_throne",
+        "south": null,
+        "west": null
+      },
+      "ambience": {
+        "type": "celestial-resonance",
+        "reverbDecay": 6.0,
+        "reverbWet": 0.80,
+        "reverbCharacter": "ethereal",
+        "sounds": [
+          { "id": "pulse1", "type": "cosmicPulse", "volume": 0.22 },
+          { "id": "crystal1", "type": "crystalHarmonic", "volume": 0.18 }
+        ]
+      },
+      "lock": {
+        "id": "resonance_seal",
+        "requiredItem": "memory_fragment",
+        "requiredSignature": "memoryEcho",
+        "unlocks": "celestial_resonance",
+        "unlocked": false
+      }
+    },
+    {
+      "id": "celestial_transcendence",
+      "name": "Transcendence Portal",
+      "description": "Beyond this point, physical form has no meaning. The portal shimmers with every color simultaneously, promising transformation beyond comprehension. This is the end of one journey and the beginning of forever.",
+      "connections": {
+        "north": null,
+        "east": null,
+        "south": "celestial_throne",
+        "west": null
+      },
+      "ambience": {
+        "type": "celestial-transcendence",
+        "reverbDecay": 8.0,
+        "reverbWet": 0.90,
+        "reverbCharacter": "ethereal",
+        "sounds": [
+          { "id": "pulse1", "type": "cosmicPulse", "volume": 0.25 },
+          { "id": "harmony1", "type": "harmonicResonance", "volume": 0.2 },
+          { "id": "shimmer1", "type": "etherealShimmer", "volume": 0.18 }
+        ]
+      },
+      "lock": {
+        "id": "transcendence_gate",
+        "requiredItem": "starlight_core",
+        "requiredSignature": "starlightPulse",
+        "requiredItem2": "cosmic_sigil",
+        "requiredSignature2": "cosmicResonance",
+        "unlocks": "victory",
+        "unlocked": false
       }
     }
   ]

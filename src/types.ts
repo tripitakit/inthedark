@@ -20,10 +20,16 @@ export type AmbientSoundType =
   // Astronave
   | 'airlockSeal' | 'pipesCreak' | 'dormantConsole' | 'computerBeep'
   | 'dormantMotor' | 'hydraulics' | 'alienReactor' | 'energyPulse'
-  | 'shipAmbient' | 'metalCreak' | 'staticBurst' | 'alienVoice' | 'etherealMusic';
+  | 'shipAmbient' | 'metalCreak' | 'staticBurst' | 'alienVoice' | 'etherealMusic'
+  // Temple
+  | 'stoneEcho' | 'chantingWhisper' | 'corridorWind' | 'ritualBells'
+  | 'ancientHum' | 'stoneDrip'
+  // Celestial
+  | 'crystalHarmonic' | 'voidWhisper' | 'energyStream' | 'cosmicPulse'
+  | 'harmonicResonance' | 'etherealShimmer';
 
 // Carattere del riverbero
-export type ReverbCharacter = 'natural' | 'metallic';
+export type ReverbCharacter = 'natural' | 'metallic' | 'stone' | 'ethereal';
 
 // Suono ambientale posizionato
 export interface AmbientSound {
@@ -43,6 +49,7 @@ export interface AmbienceConfig {
 
 // Tipo di firma sonora per oggetti
 export type ItemSoundSignature =
+  // Original items
   | 'glassChime'      // lanterna
   | 'metalScrape'     // coltello
   | 'ropeSwish'       // corda
@@ -50,7 +57,19 @@ export type ItemSoundSignature =
   | 'alienCrystal'    // cristallo_alieno
   | 'electricBuzz'    // power_cell
   | 'liquidGurgle'    // fuel_cell
-  | 'techBeep';       // activation_key
+  | 'techBeep'        // activation_key
+  // Temple items
+  | 'templeBell'      // ritual_bell
+  | 'stoneGrind'      // stone_tablet
+  | 'monkChant'       // monk_medallion
+  | 'chaliceRing'     // offering_chalice
+  // Celestial items
+  | 'crystalHum'      // crystal_shard
+  | 'voidWhisper'     // void_essence
+  | 'memoryEcho'      // memory_fragment
+  | 'harmonicTone'    // harmonic_key
+  | 'starlightPulse'  // starlight_core
+  | 'cosmicResonance';// cosmic_sigil
 
 // Oggetto raccoglibile
 export interface GameItem {
@@ -60,13 +79,52 @@ export interface GameItem {
   collected: boolean;
 }
 
-// Serratura
+// Serratura (single or multi-item)
 export interface Lock {
   id: string;
   requiredItem: string;
   requiredSignature: ItemSoundSignature; // Firma sonora dell'oggetto richiesto (hint)
+  requiredItem2?: string;                // Second item for multi-item locks
+  requiredSignature2?: ItemSoundSignature;
   unlocks: string;
   unlocked: boolean;
+}
+
+// Sequence puzzle definition
+export interface SequencePuzzle {
+  id: string;
+  roomId: string;                     // Room where puzzle is active
+  type: 'sonar' | 'rotation' | 'visit'; // Type of action sequence
+  sequence: Direction[];              // Required sequence of directions
+  requiredItem?: string;              // Item that must be held during sequence
+  reward: 'unlock' | 'reveal' | 'item'; // What happens on completion
+  rewardTarget: string;               // ID of lock/room/item affected
+  completed: boolean;
+}
+
+// Surprise audio event
+export interface SurpriseEvent {
+  id: string;
+  type: 'random' | 'proximity' | 'story';
+  rooms: string[];                    // Rooms where event can trigger
+  probability?: number;               // For random events (0-1)
+  intervalMin?: number;               // Min seconds between triggers
+  intervalMax?: number;               // Max seconds between triggers
+  proximityTarget?: string;           // Room to be near (for proximity)
+  proximityDistance?: number;         // Max distance in rooms
+  condition?: string;                 // Game state condition
+  once?: boolean;                     // Only trigger once per game
+  soundType: 'effect' | 'ambient' | 'voice';
+  soundId?: string;                   // For effect/ambient
+  voiceText?: string;                 // For voice narration
+  triggered?: boolean;                // Track if already triggered (for once)
+}
+
+// Riddle hint for puzzles
+export interface PuzzleHint {
+  puzzleId: string;                   // Lock or sequence puzzle ID
+  roomContext: string[];              // Rooms where hint is relevant
+  hints: string[];                    // Progressive hints (0=vague, higher=clearer)
 }
 
 // Nodo del grafo
@@ -109,7 +167,10 @@ export interface SaveData {
   unlockedPassages: string[];
   visitedNodes: string[];
   discoveredEdges: string[];
-  collectedItems: string[]; // Item IDs collected from nodes
+  collectedItems: string[];       // Item IDs collected from nodes
+  triggeredEvents: string[];      // Story event IDs that have been triggered
+  completedSequences: string[];   // Sequence puzzle IDs that are completed
+  hintLevels: Record<string, number>; // Hint progression per puzzle
   timestamp: number;
 }
 

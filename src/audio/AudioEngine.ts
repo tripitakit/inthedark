@@ -1,63 +1,11 @@
 import type { Direction, ItemSoundSignature } from '../types';
 
-// Configurazione bussola per ogni direzione cardinale
-// Frequenze: Nord/Sud = Do (C), Est/Ovest = Sol (G)
-// Timbri, filtri e detune: diversi per massima distinguibilità
-interface CompassConfig {
-  frequency: number;
-  waveform: OscillatorType;
-  detuneCents?: number; // Se presente, crea secondo oscillatore detuned
-  duration?: number;    // Durata in secondi (default 0.3)
-  gain?: number;        // Volume base (default 0.2, o 0.15 se detune)
-  filter: {
-    type: BiquadFilterType;
-    Q: number;
-    // Envelope: array di [time, frequency] dove time è relativo (0-1)
-    envelope: [number, number][];
-  };
-}
-
-const COMPASS_CONFIG: Record<Direction, CompassConfig> = {
-  north: {
-    frequency: 523,           // C5
-    waveform: 'sine',         // puro, etereo
-    detuneCents: 8,           // secondo osc per battimenti
-    duration: 0.45,           // più lungo
-    gain: 0.19,               // +25% rispetto a 0.15
-    filter: {
-      type: 'bandpass',
-      Q: 8,
-      envelope: [[0, 400], [0.4, 1200], [1, 600]],  // "wah" etereo
-    },
-  },
-  south: {
-    frequency: 262,           // C4
-    waveform: 'square',       // cavo, profondo
-    filter: {
-      type: 'lowpass',
-      Q: 4,
-      envelope: [[0, 2500], [1, 200]],  // chiusura drammatica
-    },
-  },
-  east: {
-    frequency: 784,           // G5
-    waveform: 'triangle',     // caldo, luminoso
-    detuneCents: 6,           // secondo osc per spessore
-    filter: {
-      type: 'highpass',
-      Q: 3,
-      envelope: [[0, 200], [1, 1500]],  // apertura luminosa
-    },
-  },
-  west: {
-    frequency: 392,           // G4
-    waveform: 'sawtooth',     // ronzante
-    filter: {
-      type: 'lowpass',
-      Q: 3,
-      envelope: [[0, 1800], [0.4, 500], [1, 1400]],  // dip - "tramonto"
-    },
-  },
+// Spoken direction names for compass
+const DIRECTION_SPEECH: Record<Direction, string> = {
+  north: 'North',
+  east: 'East',
+  south: 'South',
+  west: 'West',
 };
 
 /**
@@ -205,61 +153,119 @@ export class AudioEngine {
   }
 
   /**
-   * Riproduce tono bussola per direzione
-   * Ogni direzione ha frequenza, timbro e envelope filtro distintivi
+   * Speaks "Facing {direction}" when rotating
    */
   playCompassTone(direction: Direction): void {
-    if (!this.context || !this.masterGain) return;
+    this.speakDirection('Facing', direction);
+  }
 
-    const now = this.context.currentTime;
-    const config = COMPASS_CONFIG[direction];
-    const duration = config.duration ?? 0.3;
+  /**
+   * Speaks "Walking {direction}" when moving forward
+   */
+  playWalkingDirection(direction: Direction): void {
+    this.speakDirection('Walking', direction);
+  }
 
-    // Filtro con envelope
-    const filter = this.context.createBiquadFilter();
-    filter.type = config.filter.type;
-    filter.Q.value = config.filter.Q;
-
-    // Applica envelope al cutoff del filtro
-    for (const [time, freq] of config.filter.envelope) {
-      const absoluteTime = now + time * duration;
-      if (time === 0) {
-        filter.frequency.setValueAtTime(freq, absoluteTime);
-      } else {
-        filter.frequency.linearRampToValueAtTime(freq, absoluteTime);
-      }
+  /**
+   * Speaks "You picked up a {item name}" when collecting an item
+   */
+  speakPickup(itemName: string): void {
+    if (!('speechSynthesis' in window)) {
+      return;
     }
 
-    // Gain envelope
-    const gain = this.context.createGain();
-    const defaultGain = config.detuneCents ? 0.15 : 0.2;
-    const baseGain = config.gain ?? defaultGain;
-    gain.gain.setValueAtTime(baseGain, now);
-    gain.gain.setValueAtTime(baseGain, now + duration * 0.5);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+    const text = `You picked up a ${itemName}`;
+    const utterance = new SpeechSynthesisUtterance(text);
 
-    // Connessioni: filter → gain → master
-    filter.connect(gain);
-    gain.connect(this.masterGain);
+    // Configure to match room narrator voice settings
+    utterance.rate = 0.95;
+    utterance.pitch = 0.5;
+    utterance.volume = 1.0;
+    utterance.lang = 'en-US';
 
-    // Oscillatore principale
-    const osc1 = this.context.createOscillator();
-    osc1.type = config.waveform;
-    osc1.frequency.value = config.frequency;
-    osc1.connect(filter);
-    osc1.start(now);
-    osc1.stop(now + duration);
+    // Try to select an English male voice
+    const voices = speechSynthesis.getVoices();
+    const preferredMaleVoices = [
+      'Microsoft David', 'Daniel', 'Alex', 'Google UK English Male',
+      'Microsoft Mark', 'Thomas'
+    ];
 
-    // Secondo oscillatore detuned (se configurato)
-    if (config.detuneCents) {
-      const osc2 = this.context.createOscillator();
-      osc2.type = config.waveform;
-      osc2.frequency.value = config.frequency;
-      osc2.detune.value = config.detuneCents;
-      osc2.connect(filter);
-      osc2.start(now);
-      osc2.stop(now + duration);
+    let selectedVoice: SpeechSynthesisVoice | undefined;
+    for (const name of preferredMaleVoices) {
+      selectedVoice = voices.find((v) => v.name.includes(name));
+      if (selectedVoice) break;
     }
+
+    if (!selectedVoice) {
+      const englishVoices = voices.filter(
+        (v) => v.lang.startsWith('en-') || v.lang.startsWith('en_')
+      );
+      selectedVoice = englishVoices.find(
+        (v) => v.name.toLowerCase().includes('male') && !v.name.toLowerCase().includes('female')
+      ) || englishVoices.find(
+        (v) => !v.name.toLowerCase().includes('female')
+      ) || englishVoices[0];
+    }
+
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+    }
+
+    speechSynthesis.speak(utterance);
+  }
+
+  /**
+   * Speaks a direction phrase using Web Speech API
+   */
+  private speakDirection(prefix: string, direction: Direction): void {
+    if (!('speechSynthesis' in window)) {
+      console.log('AudioEngine: Web Speech API not supported');
+      return;
+    }
+
+    // Cancel any pending speech to allow rapid direction changes
+    speechSynthesis.cancel();
+
+    const text = `${prefix} ${DIRECTION_SPEECH[direction]}`;
+    const utterance = new SpeechSynthesisUtterance(text);
+
+    // Configure to match room narrator voice settings
+    utterance.rate = 0.95; // Slightly slower than normal
+    utterance.pitch = 0.5; // Low pitch for mechanical tone
+    utterance.volume = 1.0;
+    utterance.lang = 'en-US';
+
+    // Try to select an English male voice
+    const voices = speechSynthesis.getVoices();
+    const preferredMaleVoices = [
+      'Microsoft David', 'Daniel', 'Alex', 'Google UK English Male',
+      'Microsoft Mark', 'Thomas'
+    ];
+
+    // First try preferred male voices
+    let selectedVoice: SpeechSynthesisVoice | undefined;
+    for (const name of preferredMaleVoices) {
+      selectedVoice = voices.find((v) => v.name.includes(name));
+      if (selectedVoice) break;
+    }
+
+    // Fallback to any English male voice
+    if (!selectedVoice) {
+      const englishVoices = voices.filter(
+        (v) => v.lang.startsWith('en-') || v.lang.startsWith('en_')
+      );
+      selectedVoice = englishVoices.find(
+        (v) => v.name.toLowerCase().includes('male') && !v.name.toLowerCase().includes('female')
+      ) || englishVoices.find(
+        (v) => !v.name.toLowerCase().includes('female')
+      ) || englishVoices[0];
+    }
+
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+    }
+
+    speechSynthesis.speak(utterance);
   }
 
   /**
@@ -592,6 +598,7 @@ export class AudioEngine {
    */
   playItemSignature(signature: ItemSoundSignature): void {
     switch (signature) {
+      // Original items
       case 'glassChime': this.playGlassChime(); break;
       case 'metalScrape': this.playMetalScrape(); break;
       case 'ropeSwish': this.playRopeSwish(); break;
@@ -600,6 +607,18 @@ export class AudioEngine {
       case 'electricBuzz': this.playElectricBuzz(); break;
       case 'liquidGurgle': this.playLiquidGurgle(); break;
       case 'techBeep': this.playTechBeep(); break;
+      // Temple items
+      case 'templeBell': this.playTempleBell(); break;
+      case 'stoneGrind': this.playStoneGrind(); break;
+      case 'monkChant': this.playMonkChant(); break;
+      case 'chaliceRing': this.playChaliceRing(); break;
+      // Celestial items
+      case 'crystalHum': this.playCrystalHum(); break;
+      case 'voidWhisper': this.playVoidWhisper(); break;
+      case 'memoryEcho': this.playMemoryEcho(); break;
+      case 'harmonicTone': this.playHarmonicTone(); break;
+      case 'starlightPulse': this.playStarlightPulse(); break;
+      case 'cosmicResonance': this.playCosmicResonance(); break;
       default:
         console.warn(`Unknown item signature: ${signature}`);
     }
@@ -919,6 +938,367 @@ export class AudioEngine {
   }
 
   // ========================================
+  // FIRME SONORE TEMPIO
+  // ========================================
+
+  /**
+   * Campana del tempio (ritual_bell) - risonanza metallica profonda
+   */
+  private playTempleBell(): void {
+    if (!this.context || !this.masterGain) return;
+
+    const now = this.context.currentTime;
+    const baseFreq = 180;
+    const duration = 1.5;
+
+    // Main bell strike
+    const osc1 = this.context.createOscillator();
+    osc1.type = 'sine';
+    osc1.frequency.value = baseFreq;
+
+    // Overtones (bell partials)
+    const osc2 = this.context.createOscillator();
+    osc2.type = 'sine';
+    osc2.frequency.value = baseFreq * 2.4;
+
+    const osc3 = this.context.createOscillator();
+    osc3.type = 'sine';
+    osc3.frequency.value = baseFreq * 5.4;
+
+    const gain1 = this.context.createGain();
+    gain1.gain.setValueAtTime(0.3, now);
+    gain1.gain.exponentialRampToValueAtTime(0.01, now + duration);
+
+    const gain2 = this.context.createGain();
+    gain2.gain.setValueAtTime(0.15, now);
+    gain2.gain.exponentialRampToValueAtTime(0.01, now + duration * 0.6);
+
+    const gain3 = this.context.createGain();
+    gain3.gain.setValueAtTime(0.08, now);
+    gain3.gain.exponentialRampToValueAtTime(0.01, now + duration * 0.3);
+
+    osc1.connect(gain1);
+    osc2.connect(gain2);
+    osc3.connect(gain3);
+    gain1.connect(this.masterGain);
+    gain2.connect(this.masterGain);
+    gain3.connect(this.masterGain);
+
+    osc1.start(now);
+    osc2.start(now);
+    osc3.start(now);
+    osc1.stop(now + duration);
+    osc2.stop(now + duration * 0.6);
+    osc3.stop(now + duration * 0.3);
+  }
+
+  /**
+   * Pietra che si muove (stone_tablet) - rumore di sfregamento pietroso
+   */
+  private playStoneGrind(): void {
+    if (!this.context || !this.masterGain) return;
+
+    const now = this.context.currentTime;
+    const duration = 0.4;
+    const bufferSize = Math.floor(this.context.sampleRate * duration);
+    const buffer = this.context.createBuffer(1, bufferSize, this.context.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    for (let i = 0; i < bufferSize; i++) {
+      const t = i / bufferSize;
+      const envelope = Math.sin(t * Math.PI);
+      data[i] = (Math.random() * 2 - 1) * envelope;
+    }
+
+    const source = this.context.createBufferSource();
+    source.buffer = buffer;
+
+    const filter = this.context.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(300, now);
+    filter.frequency.linearRampToValueAtTime(600, now + duration);
+    filter.Q.value = 3;
+
+    const gain = this.context.createGain();
+    gain.gain.value = 0.35;
+
+    source.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.masterGain);
+
+    source.start(now);
+    source.stop(now + duration);
+  }
+
+  /**
+   * Canto monaco (monk_medallion) - tono vocale mistico
+   */
+  private playMonkChant(): void {
+    if (!this.context || !this.masterGain) return;
+
+    const now = this.context.currentTime;
+    const duration = 0.8;
+
+    // Vocal formant synthesis
+    const source = this.context.createOscillator();
+    source.type = 'sawtooth';
+    source.frequency.value = 120;
+
+    const formants = [300, 800, 2500];
+    const masterGain = this.context.createGain();
+    masterGain.gain.setValueAtTime(0, now);
+    masterGain.gain.linearRampToValueAtTime(0.2, now + 0.1);
+    masterGain.gain.setValueAtTime(0.2, now + duration - 0.2);
+    masterGain.gain.linearRampToValueAtTime(0.01, now + duration);
+
+    for (const freq of formants) {
+      const filter = this.context.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.value = freq;
+      filter.Q.value = 10;
+
+      const formantGain = this.context.createGain();
+      formantGain.gain.value = 0.25;
+
+      source.connect(filter);
+      filter.connect(formantGain);
+      formantGain.connect(masterGain);
+    }
+
+    masterGain.connect(this.masterGain);
+
+    source.start(now);
+    source.stop(now + duration);
+  }
+
+  /**
+   * Tintinnio calice (offering_chalice) - risonanza metallica alta
+   */
+  private playChaliceRing(): void {
+    if (!this.context || !this.masterGain) return;
+
+    const now = this.context.currentTime;
+    const frequencies = [1800, 2400, 3200];
+    const duration = 0.6;
+
+    for (let i = 0; i < frequencies.length; i++) {
+      const osc = this.context.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = frequencies[i];
+
+      const gain = this.context.createGain();
+      gain.gain.setValueAtTime(0.12 - i * 0.03, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.start(now);
+      osc.stop(now + duration);
+    }
+  }
+
+  // ========================================
+  // FIRME SONORE CELESTI
+  // ========================================
+
+  /**
+   * Ronzio cristallino (crystal_shard) - tono alto costante con battimenti
+   */
+  private playCrystalHum(): void {
+    if (!this.context || !this.masterGain) return;
+
+    const now = this.context.currentTime;
+    const duration = 0.5;
+
+    const osc1 = this.context.createOscillator();
+    osc1.type = 'sine';
+    osc1.frequency.value = 1200;
+
+    const osc2 = this.context.createOscillator();
+    osc2.type = 'sine';
+    osc2.frequency.value = 1205; // Slight detune for beating
+
+    const gain = this.context.createGain();
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.2, now + 0.05);
+    gain.gain.setValueAtTime(0.2, now + duration - 0.1);
+    gain.gain.linearRampToValueAtTime(0.01, now + duration);
+
+    osc1.connect(gain);
+    osc2.connect(gain);
+    gain.connect(this.masterGain);
+
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + duration);
+    osc2.stop(now + duration);
+  }
+
+  /**
+   * Sussurro del vuoto (void_essence) - suono etereo discendente
+   */
+  private playVoidWhisper(): void {
+    if (!this.context || !this.masterGain) return;
+
+    const now = this.context.currentTime;
+    const duration = 0.7;
+
+    const osc = this.context.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(800, now);
+    osc.frequency.exponentialRampToValueAtTime(200, now + duration);
+
+    const filter = this.context.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(1000, now);
+    filter.frequency.exponentialRampToValueAtTime(300, now + duration);
+    filter.Q.value = 5;
+
+    const gain = this.context.createGain();
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.15, now + 0.1);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.masterGain);
+
+    osc.start(now);
+    osc.stop(now + duration);
+  }
+
+  /**
+   * Eco della memoria (memory_fragment) - arpeggio riverberato
+   */
+  private playMemoryEcho(): void {
+    if (!this.context || !this.masterGain) return;
+
+    const now = this.context.currentTime;
+    const notes = [440, 550, 660, 550];
+    const noteDuration = 0.15;
+    const noteGap = 0.1;
+
+    for (let i = 0; i < notes.length; i++) {
+      const startTime = now + i * (noteDuration + noteGap);
+
+      const osc = this.context.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = notes[i];
+
+      const gain = this.context.createGain();
+      gain.gain.setValueAtTime(0, startTime);
+      gain.gain.linearRampToValueAtTime(0.15 - i * 0.03, startTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.01, startTime + noteDuration * 2);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.start(startTime);
+      osc.stop(startTime + noteDuration * 2);
+    }
+  }
+
+  /**
+   * Tono armonico (harmonic_key) - accordo puro celestiale
+   */
+  private playHarmonicTone(): void {
+    if (!this.context || !this.masterGain) return;
+
+    const now = this.context.currentTime;
+    const frequencies = [330, 415, 495, 660]; // E-G#-B-E (E major)
+    const duration = 0.6;
+
+    for (const freq of frequencies) {
+      const osc = this.context.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+
+      const gain = this.context.createGain();
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.1, now + 0.05);
+      gain.gain.setValueAtTime(0.1, now + duration - 0.15);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.start(now);
+      osc.stop(now + duration);
+    }
+  }
+
+  /**
+   * Pulsazione stellare (starlight_core) - sweep luminoso ascendente
+   */
+  private playStarlightPulse(): void {
+    if (!this.context || !this.masterGain) return;
+
+    const now = this.context.currentTime;
+    const duration = 0.5;
+
+    const osc = this.context.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(400, now);
+    osc.frequency.exponentialRampToValueAtTime(1600, now + duration * 0.7);
+    osc.frequency.exponentialRampToValueAtTime(1200, now + duration);
+
+    const gain = this.context.createGain();
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.25, now + duration * 0.3);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+
+    osc.connect(gain);
+    gain.connect(this.masterGain);
+
+    osc.start(now);
+    osc.stop(now + duration);
+  }
+
+  /**
+   * Risonanza cosmica (cosmic_sigil) - armonici ultraterreni
+   */
+  private playCosmicResonance(): void {
+    if (!this.context || !this.masterGain) return;
+
+    const now = this.context.currentTime;
+    // Non-standard harmonic ratios for otherworldly feel
+    const frequencies = [220, 293, 366, 488];
+    const duration = 0.8;
+
+    for (let i = 0; i < frequencies.length; i++) {
+      const osc = this.context.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = frequencies[i];
+
+      // Slight vibrato
+      const lfo = this.context.createOscillator();
+      lfo.type = 'sine';
+      lfo.frequency.value = 4 + i;
+
+      const lfoGain = this.context.createGain();
+      lfoGain.gain.value = 3;
+
+      lfo.connect(lfoGain);
+      lfoGain.connect(osc.frequency);
+
+      const gain = this.context.createGain();
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.12 - i * 0.02, now + 0.1);
+      gain.gain.setValueAtTime(0.12 - i * 0.02, now + duration - 0.2);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.start(now);
+      lfo.start(now);
+      osc.stop(now + duration);
+      lfo.stop(now + duration);
+    }
+  }
+
+  // ========================================
   // SEQUENZA VITTORIA
   // ========================================
 
@@ -1110,6 +1490,104 @@ export class AudioEngine {
 
       osc.start(noteStart);
       osc.stop(noteStart + 0.5);
+    }
+  }
+
+  // ========================================
+  // SURPRISE EVENT AUDIO (stub methods)
+  // Full implementations will be added in Phase 2
+  // ========================================
+
+  /**
+   * Play a surprise sound effect
+   * @param soundId Identifier for the effect type
+   */
+  playSurpriseEffect(soundId: string): void {
+    if (!this.context || !this.masterGain) return;
+    console.log(`SurpriseEffect: ${soundId} (stub - full implementation pending)`);
+    // TODO: Implement specific effects based on soundId
+    // For now, play a generic mysterious sound
+    this.playGenericSurpriseEffect();
+  }
+
+  /**
+   * Play a surprise ambient layer
+   * @param soundId Identifier for the ambient type
+   */
+  playSurpriseAmbient(soundId: string): void {
+    if (!this.context || !this.masterGain) return;
+    console.log(`SurpriseAmbient: ${soundId} (stub - full implementation pending)`);
+    // TODO: Implement specific ambient sounds
+  }
+
+  /**
+   * Play voice narration (lo-fi computer voice)
+   * @param text Text to speak
+   */
+  playVoiceNarration(text: string): void {
+    if (!this.context || !this.masterGain) return;
+    console.log(`VoiceNarration: "${text}" (stub - VoiceSynthesizer pending)`);
+    // TODO: Implement via VoiceSynthesizer
+    // For now, play a notification chime
+    this.playNotificationChime();
+  }
+
+  /**
+   * Generic surprise effect - eerie tone
+   */
+  private playGenericSurpriseEffect(): void {
+    if (!this.context || !this.masterGain) return;
+
+    const now = this.context.currentTime;
+
+    const osc = this.context.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(300, now);
+    osc.frequency.exponentialRampToValueAtTime(200, now + 0.5);
+
+    const filter = this.context.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 600;
+
+    const gain = this.context.createGain();
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.15, now + 0.1);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.masterGain);
+
+    osc.start(now);
+    osc.stop(now + 0.5);
+  }
+
+  /**
+   * Notification chime for voice placeholder
+   */
+  private playNotificationChime(): void {
+    if (!this.context || !this.masterGain) return;
+
+    const now = this.context.currentTime;
+    const notes = [440, 550, 660];
+
+    for (let i = 0; i < notes.length; i++) {
+      const startTime = now + i * 0.12;
+
+      const osc = this.context.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = notes[i];
+
+      const gain = this.context.createGain();
+      gain.gain.setValueAtTime(0, startTime);
+      gain.gain.linearRampToValueAtTime(0.12, startTime + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.2);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.start(startTime);
+      osc.stop(startTime + 0.2);
     }
   }
 }

@@ -5,8 +5,6 @@ import type { ItemSoundSignature } from '../types';
 
 // Timing della sequenza sonar (in millisecondi)
 const TIMING = {
-  COMPASS_DURATION: 300,   // Durata tono bussola
-  PING_DELAY: 350,         // Delay prima del ping
   ECHO_WALL_DELAY: 150,    // Eco breve = muro vicino (no passaggio)
   ECHO_PASSAGE_DELAY: 450, // Eco lungo = spazio aperto (passaggio)
   LOCK_SOUND_DELAY: 400,   // Delay dopo eco - gives time for echo to finish
@@ -38,10 +36,9 @@ export class Sonar {
 
   /**
    * Attiva la sequenza sonar completa
-   * 1. Tono bussola (direzione corrente)
-   * 2. Ping di andata
-   * 3. Eco di ritorno (solo frontale)
-   * 4. Suono serratura (se presente lock chiuso)
+   * 1. Ping di andata
+   * 2. Eco di ritorno (solo frontale)
+   * 3. Suono serratura (se presente lock chiuso)
    */
   activate(): void {
     const context = this.audioEngine.getContext();
@@ -74,28 +71,23 @@ export class Sonar {
       }
     }
 
-    // 1. Tono bussola (immediato)
-    this.audioEngine.playCompassTone(orientation);
+    // 1. Ping (immediate)
+    this.audioEngine.playPing();
 
-    // 2. Ping dopo delay
-    setTimeout(() => {
-      this.audioEngine.playPing();
-    }, TIMING.PING_DELAY);
-
-    // 3. Eco di ritorno (solo frontale)
+    // 2. Eco di ritorno (solo frontale)
     // - Delay breve se c'è un muro (suono rimbalza subito)
     // - Delay lungo se c'è passaggio (suono viaggia lontano)
     const echoDelay = hasPassageAhead ? TIMING.ECHO_PASSAGE_DELAY : TIMING.ECHO_WALL_DELAY;
 
     setTimeout(() => {
       this.audioEngine.playEchoFiltered(hasPassageAhead);
-    }, TIMING.PING_DELAY + echoDelay);
+    }, echoDelay);
 
-    // 4. Eco firma oggetto richiesto (se c'è lock chiuso)
+    // 3. Eco firma oggetto richiesto (se c'è lock chiuso)
     if (hasLockedDoor && lockSignature) {
       setTimeout(() => {
         this.audioEngine.playSignatureEcho(lockSignature!);
-      }, TIMING.PING_DELAY + echoDelay + TIMING.LOCK_SOUND_DELAY);
+      }, echoDelay + TIMING.LOCK_SOUND_DELAY);
     }
 
     // Log per debug

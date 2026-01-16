@@ -1,0 +1,333 @@
+import type { GameState } from './GameState';
+import { VoiceSynthesizer } from '../audio/VoiceSynthesizer';
+import type { AudioEngine } from '../audio/AudioEngine';
+
+/**
+ * Puzzle hint definition
+ */
+interface PuzzleHint {
+  puzzleId: string;
+  roomContext: string[]; // Rooms where this hint is relevant
+  requiredItem?: string; // Item player needs (if puzzle requires one)
+  lockId?: string; // Lock ID if hint is for a lock puzzle
+  hints: string[]; // Progressive hints (index 0 = vague, higher = clearer)
+}
+
+/**
+ * All puzzle hints organized by zone
+ */
+const PUZZLE_HINTS: PuzzleHint[] = [
+  // === FOREST / CAVE PUZZLES ===
+  {
+    puzzleId: 'chasm_rope',
+    roomContext: ['cave_chasm', 'cave_hall', 'cave_crossroads'],
+    lockId: 'chasm_lock',
+    hints: [
+      'The void hungers... but fibers may bridge the darkness.',
+      'What binds, when woven, can span the abyss.',
+      'A rope. You need a rope to cross the chasm.',
+    ],
+  },
+  {
+    puzzleId: 'stream_gem',
+    roomContext: ['forest_stream', 'forest_clearing'],
+    lockId: 'stream_lock',
+    hints: [
+      'Crystal waters reflect crystalline keys.',
+      'Something blue glimmers in the depths... or do you carry it?',
+      'The blue gem unlocks the path through the stream.',
+    ],
+  },
+
+  // === SHIP PUZZLES ===
+  {
+    puzzleId: 'airlock_crystal',
+    roomContext: ['cave_entrance', 'ship_airlock', 'cave_deep'],
+    lockId: 'airlock_lock',
+    hints: [
+      'Alien hearts beat in crystalline rhythm.',
+      'The pulsing gem speaks the tongue of the stars.',
+      'Use the alien crystal to open the airlock.',
+    ],
+  },
+  {
+    puzzleId: 'engineering_cell',
+    roomContext: ['ship_engineering', 'ship_corridor', 'ship_bridge'],
+    lockId: 'engineering_lock',
+    hints: [
+      'Machines hunger for stored lightning.',
+      'Power flows from contained energy.',
+      'The power cell energizes the engineering bay.',
+    ],
+  },
+  {
+    puzzleId: 'reactor_fuel',
+    roomContext: ['ship_reactor', 'ship_corridor', 'ship_engineering'],
+    lockId: 'reactor_lock',
+    hints: [
+      'The heart of the ship thirsts for fire.',
+      'Fuel feeds the flames of propulsion.',
+      'Insert the fuel cell into the reactor.',
+    ],
+  },
+  {
+    puzzleId: 'bridge_key',
+    roomContext: ['ship_bridge', 'ship_quarters', 'ship_corridor'],
+    lockId: 'bridge_lock',
+    hints: [
+      'Command requires authority, authority requires proof.',
+      'A key shaped for stellar navigation.',
+      'The activation key unlocks the bridge controls.',
+    ],
+  },
+
+  // === TEMPLE PUZZLES ===
+  {
+    puzzleId: 'sanctuary_seal',
+    roomContext: ['temple_main_hall', 'temple_antechamber', 'temple_side_chapel'],
+    lockId: 'sanctuary_seal',
+    hints: [
+      'Sacred spaces answer to sacred sounds.',
+      'Ring the call that summons the devoted.',
+      'The ritual bell opens the sanctuary.',
+    ],
+  },
+  {
+    puzzleId: 'crypt_seal',
+    roomContext: ['temple_main_hall', 'temple_library', 'temple_crypt_stairs'],
+    lockId: 'crypt_seal',
+    hints: [
+      'Stone remembers... the tablets hold the key.',
+      'Written wisdom unlocks the resting place.',
+      'Use the stone tablet to enter the crypt.',
+    ],
+  },
+  {
+    puzzleId: 'inner_sanctum',
+    roomContext: ['temple_crypt', 'temple_sanctuary', 'temple_meditation'],
+    lockId: 'sanctum_seal',
+    hints: [
+      'The holy one wore their faith upon their chest.',
+      'A medallion marks the path of the enlightened.',
+      'The monk medallion grants passage to the inner sanctum.',
+    ],
+  },
+  {
+    puzzleId: 'bell_sequence',
+    roomContext: ['temple_main_hall'],
+    hints: [
+      'The winds speak in order: cold, then rising, then setting.',
+      'North whispers first, East follows, West completes.',
+      'Use sonar facing North, then East, then West.',
+    ],
+  },
+  {
+    puzzleId: 'portal_multi',
+    roomContext: ['temple_portal_room', 'temple_inner_sanctum'],
+    lockId: 'portal_activation',
+    hints: [
+      'Two become one: the vessel and the light it holds.',
+      'Fill the chalice with celestial radiance.',
+      'Combine the offering chalice and crystal shard.',
+    ],
+  },
+
+  // === CELESTIAL PUZZLES ===
+  {
+    puzzleId: 'archive_seal',
+    roomContext: ['celestial_spire', 'celestial_fountain', 'celestial_archive'],
+    lockId: 'archive_seal',
+    hints: [
+      'Harmony unlocks memory.',
+      'The key that sings opens the songs of ages.',
+      'The harmonic key opens the celestial archive.',
+    ],
+  },
+  {
+    puzzleId: 'oracle_seal',
+    roomContext: ['celestial_void_edge', 'celestial_bridge', 'celestial_oracle'],
+    lockId: 'oracle_seal',
+    hints: [
+      'Emptiness holds wisdom.',
+      'Capture nothing to learn everything.',
+      'The void essence reveals the oracle.',
+    ],
+  },
+  {
+    puzzleId: 'resonance_seal',
+    roomContext: ['celestial_throne', 'celestial_memory_hall'],
+    lockId: 'resonance_seal',
+    hints: [
+      'Echoes of the past resonate with the present.',
+      'A fragment of memory completes the pattern.',
+      'Use the memory fragment at the resonance chamber.',
+    ],
+  },
+  {
+    puzzleId: 'harmonic_alignment',
+    roomContext: ['celestial_spire', 'celestial_bridge'],
+    hints: [
+      'The key dances with the cosmos: a full rotation of being.',
+      'Hold the tone, face each direction in the suns path.',
+      'While holding harmonic key, rotate North, East, South, West.',
+    ],
+  },
+  {
+    puzzleId: 'transcendence',
+    roomContext: ['celestial_throne', 'celestial_transcendence', 'celestial_oracle', 'celestial_archive'],
+    lockId: 'transcendence_gate',
+    hints: [
+      'Two truths complete the journey: light and understanding.',
+      'Stars heart and cosmic symbol together ascend.',
+      'Combine starlight core and cosmic sigil for transcendence.',
+    ],
+  },
+
+  // === GENERAL EXPLORATION HINTS ===
+  {
+    puzzleId: 'general_exploration',
+    roomContext: ['forest_start', 'forest_path', 'forest_clearing'],
+    hints: [
+      'Listen to the echoes... they reveal the path.',
+      'Use sonar to discover passages in each direction.',
+      'Press Enter to sonar, arrows to move and turn.',
+    ],
+  },
+];
+
+/**
+ * HintSystem - Context-aware riddle hints with lo-fi voice
+ *
+ * Provides progressive hints based on:
+ * - Current room location
+ * - Player inventory
+ * - Puzzle completion state
+ *
+ * Features:
+ * - 30 second cooldown between hints
+ * - Progressive hints (vague → clear)
+ * - Lo-fi computer voice output
+ */
+export class HintSystem {
+  private gameState: GameState;
+  private voiceSynth: VoiceSynthesizer;
+  private lastHintTime: number = 0;
+  private cooldownMs: number = 30000; // 30 seconds
+
+  constructor(gameState: GameState, audioEngine: AudioEngine) {
+    this.gameState = gameState;
+    this.voiceSynth = new VoiceSynthesizer(audioEngine);
+  }
+
+  /**
+   * Request a hint for the current context
+   * Returns true if hint was provided, false if on cooldown or unavailable
+   */
+  async requestHint(): Promise<boolean> {
+    // Check cooldown
+    const now = Date.now();
+    if (now - this.lastHintTime < this.cooldownMs) {
+      console.log('HintSystem: Cooldown active');
+      return false;
+    }
+
+    // Check if already speaking
+    if (this.voiceSynth.speaking) {
+      return false;
+    }
+
+    // Find relevant hint
+    const hint = this.findRelevantHint();
+    if (!hint) {
+      // No specific hint - give general encouragement
+      await this.voiceSynth.speak('Listen to your surroundings. The path reveals itself.');
+      this.lastHintTime = now;
+      return true;
+    }
+
+    // Get progressive hint level
+    const hintLevel = this.gameState.incrementHintLevel(hint.puzzleId);
+    const hintIndex = Math.min(hintLevel - 1, hint.hints.length - 1);
+    const hintText = hint.hints[hintIndex];
+
+    console.log(`HintSystem: Providing hint ${hintLevel} for ${hint.puzzleId}`);
+    await this.voiceSynth.speak(hintText);
+    this.lastHintTime = now;
+
+    return true;
+  }
+
+  /**
+   * Find the most relevant hint for current game state
+   */
+  private findRelevantHint(): PuzzleHint | null {
+    const currentRoom = this.gameState.currentNode;
+
+    // Filter hints relevant to current room
+    const relevantHints = PUZZLE_HINTS.filter((hint) =>
+      hint.roomContext.includes(currentRoom)
+    );
+
+    if (relevantHints.length === 0) {
+      return null;
+    }
+
+    // Prioritize hints for unsolved puzzles
+    for (const hint of relevantHints) {
+      // Skip if puzzle already completed
+      if (hint.lockId && this.gameState.isPassageUnlocked(hint.lockId)) {
+        continue;
+      }
+
+      // Skip sequence puzzles if completed
+      if (!hint.lockId && this.gameState.isSequenceCompleted(hint.puzzleId)) {
+        continue;
+      }
+
+      // Check if player has required item for this puzzle
+      if (hint.requiredItem && !this.gameState.hasItem(hint.requiredItem)) {
+        // Player doesn't have the item yet - hint about finding it
+        continue;
+      }
+
+      return hint;
+    }
+
+    // Return first relevant hint as fallback
+    return relevantHints[0];
+  }
+
+  /**
+   * Check if hint system is ready (not on cooldown, not speaking)
+   */
+  isReady(): boolean {
+    const now = Date.now();
+    return (
+      now - this.lastHintTime >= this.cooldownMs &&
+      !this.voiceSynth.speaking
+    );
+  }
+
+  /**
+   * Get remaining cooldown in seconds
+   */
+  getCooldownRemaining(): number {
+    const elapsed = Date.now() - this.lastHintTime;
+    const remaining = this.cooldownMs - elapsed;
+    return Math.max(0, Math.ceil(remaining / 1000));
+  }
+
+  /**
+   * Update game state reference (for save/load)
+   */
+  setGameState(gameState: GameState): void {
+    this.gameState = gameState;
+  }
+
+  /**
+   * Reset cooldown (for testing)
+   */
+  resetCooldown(): void {
+    this.lastHintTime = 0;
+  }
+}

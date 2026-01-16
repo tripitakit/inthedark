@@ -8,6 +8,10 @@ const SAVE_KEY = 'inthedark_save';
 export class GameState {
   private state: PlayerState;
   private collectedItems: Set<string> = new Set();
+  private triggeredEvents: Set<string> = new Set();
+  private completedSequences: Set<string> = new Set();
+  private hintLevels: Map<string, number> = new Map();
+  private roomChangeCallbacks: ((roomId: string) => void)[] = [];
 
   constructor(startNode: string, startOrientation: Direction = 'north') {
     this.state = {
@@ -52,10 +56,22 @@ export class GameState {
    * Aggiorna la posizione corrente
    */
   setCurrentNode(nodeId: string): void {
+    const previousNode = this.state.currentNode;
     this.state.currentNode = nodeId;
     if (!this.state.visitedNodes.includes(nodeId)) {
       this.state.visitedNodes.push(nodeId);
     }
+    // Notify room change callbacks (only if actually changed)
+    if (nodeId !== previousNode) {
+      this.roomChangeCallbacks.forEach(callback => callback(nodeId));
+    }
+  }
+
+  /**
+   * Register a callback to be called when room changes
+   */
+  onRoomChange(callback: (roomId: string) => void): void {
+    this.roomChangeCallbacks.push(callback);
   }
 
   /**
@@ -168,6 +184,57 @@ export class GameState {
     return this.state.discoveredEdges.includes(`${nodeId}:${direction}`);
   }
 
+  // === Story Event Tracking ===
+
+  /**
+   * Marks a story event as triggered
+   */
+  triggerEvent(eventId: string): void {
+    this.triggeredEvents.add(eventId);
+  }
+
+  /**
+   * Checks if a story event has been triggered
+   */
+  isEventTriggered(eventId: string): boolean {
+    return this.triggeredEvents.has(eventId);
+  }
+
+  // === Sequence Puzzle Tracking ===
+
+  /**
+   * Marks a sequence puzzle as completed
+   */
+  completeSequence(sequenceId: string): void {
+    this.completedSequences.add(sequenceId);
+  }
+
+  /**
+   * Checks if a sequence puzzle is completed
+   */
+  isSequenceCompleted(sequenceId: string): boolean {
+    return this.completedSequences.has(sequenceId);
+  }
+
+  // === Hint System ===
+
+  /**
+   * Gets the current hint level for a puzzle (0 = not requested yet)
+   */
+  getHintLevel(puzzleId: string): number {
+    return this.hintLevels.get(puzzleId) || 0;
+  }
+
+  /**
+   * Increments hint level for a puzzle and returns the new level
+   */
+  incrementHintLevel(puzzleId: string): number {
+    const current = this.getHintLevel(puzzleId);
+    const next = current + 1;
+    this.hintLevels.set(puzzleId, next);
+    return next;
+  }
+
   /**
    * Debug: stampa stato corrente
    */
@@ -194,6 +261,9 @@ export class GameState {
         visitedNodes: this.state.visitedNodes,
         discoveredEdges: this.state.discoveredEdges,
         collectedItems: Array.from(this.collectedItems),
+        triggeredEvents: Array.from(this.triggeredEvents),
+        completedSequences: Array.from(this.completedSequences),
+        hintLevels: Object.fromEntries(this.hintLevels),
         timestamp: Date.now(),
       };
       localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
@@ -237,6 +307,9 @@ export class GameState {
     state.state.visitedNodes = saveData.visitedNodes;
     state.state.discoveredEdges = saveData.discoveredEdges;
     state.collectedItems = new Set(saveData.collectedItems);
+    state.triggeredEvents = new Set(saveData.triggeredEvents || []);
+    state.completedSequences = new Set(saveData.completedSequences || []);
+    state.hintLevels = new Map(Object.entries(saveData.hintLevels || {}));
     return state;
   }
 

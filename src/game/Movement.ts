@@ -59,7 +59,8 @@ export class Movement {
         return false;
       }
 
-      // Movimento valido: riproduci 4 passi prima di entrare nel nuovo nodo
+      // Movimento valido: annuncia direzione e riproduci passi
+      audioEngine.playWalkingDirection(direction);
       await audioEngine.playFootsteps();
 
       // Discover the edge we're walking through (both directions)
