@@ -1,0 +1,509 @@
+{
+  "id": "alien-adventure",
+  "name": "In The Dark - Risveglio Alieno",
+  "startNode": "forest_start",
+  "startOrientation": "north",
+  "nodes": [
+    {
+      "id": "forest_start",
+      "name": "Inizio Sentiero",
+      "description": "Ti risvegli in una foresta. Un sentiero si apre verso nord.",
+      "connections": {
+        "north": "forest_path",
+        "east": null,
+        "south": null,
+        "west": null
+      },
+      "ambience": {
+        "type": "forest",
+        "reverbDecay": 1.0,
+        "reverbWet": 0.20,
+        "reverbCharacter": "natural",
+        "sounds": [
+          { "id": "wind1", "type": "wind", "volume": 0.2 }
+        ]
+      }
+    },
+    {
+      "id": "forest_path",
+      "name": "Sentiero Principale",
+      "description": "Un bivio nel bosco. Sentieri si aprono in tutte le direzioni.",
+      "connections": {
+        "north": "forest_clearing",
+        "east": "forest_stream",
+        "south": "forest_start",
+        "west": "forest_thicket"
+      },
+      "ambience": {
+        "type": "forest",
+        "reverbDecay": 1.2,
+        "reverbWet": 0.22,
+        "reverbCharacter": "natural",
+        "sounds": [
+          { "id": "wind1", "type": "wind", "volume": 0.25 }
+        ]
+      }
+    },
+    {
+      "id": "forest_clearing",
+      "name": "Radura",
+      "description": "Una piccola radura illuminata dalla luna. Qualcosa luccica per terra.",
+      "connections": {
+        "north": null,
+        "east": null,
+        "south": "forest_path",
+        "west": null
+      },
+      "ambience": {
+        "type": "forest-open",
+        "reverbDecay": 0.8,
+        "reverbWet": 0.15,
+        "reverbCharacter": "natural",
+        "sounds": [
+          { "id": "wind1", "type": "wind", "volume": 0.3 }
+        ]
+      },
+      "item": {
+        "id": "lanterna",
+        "sound": "pickup",
+        "soundSignature": "glassChime",
+        "collected": false
+      }
+    },
+    {
+      "id": "forest_thicket",
+      "name": "Boscaglia",
+      "description": "Rami intricati bloccano ogni direzione tranne est. Qualcosa di metallico riflette la luce.",
+      "connections": {
+        "north": null,
+        "east": "forest_path",
+        "south": null,
+        "west": null
+      },
+      "ambience": {
+        "type": "forest-dense",
+        "reverbDecay": 1.5,
+        "reverbWet": 0.28,
+        "reverbCharacter": "natural",
+        "sounds": [
+          { "id": "wind1", "type": "wind", "volume": 0.1 }
+        ]
+      },
+      "item": {
+        "id": "coltello",
+        "sound": "pickup",
+        "soundSignature": "metalScrape",
+        "collected": false
+      }
+    },
+    {
+      "id": "forest_stream",
+      "name": "Ruscello",
+      "description": "Un ruscello scorre verso sud, dove si apre l'ingresso di una grotta.",
+      "connections": {
+        "north": null,
+        "east": null,
+        "south": "cave_entrance",
+        "west": "forest_path"
+      },
+      "ambience": {
+        "type": "forest-stream",
+        "reverbDecay": 1.3,
+        "reverbWet": 0.25,
+        "reverbCharacter": "natural",
+        "sounds": [
+          { "id": "water1", "type": "waterDrip", "volume": 0.35 },
+          { "id": "wind1", "type": "wind", "volume": 0.12 }
+        ]
+      }
+    },
+    {
+      "id": "cave_entrance",
+      "name": "Ingresso Grotta",
+      "description": "L'ingresso di una grotta. L'aria si fa umida e fredda.",
+      "connections": {
+        "north": "forest_stream",
+        "east": null,
+        "south": "cave_hall",
+        "west": null
+      },
+      "ambience": {
+        "type": "cave-entrance",
+        "reverbDecay": 1.8,
+        "reverbWet": 0.35,
+        "reverbCharacter": "natural",
+        "sounds": [
+          { "id": "wind1", "type": "wind", "volume": 0.15 },
+          { "id": "drip1", "type": "waterDrip", "volume": 0.1 }
+        ]
+      }
+    },
+    {
+      "id": "cave_hall",
+      "name": "Sala della Grotta",
+      "description": "Una grande sala sotterranea. Il suono rimbomba sulle pareti.",
+      "connections": {
+        "north": "cave_entrance",
+        "east": null,
+        "south": "cave_crossroads",
+        "west": null
+      },
+      "ambience": {
+        "type": "cave",
+        "reverbDecay": 2.5,
+        "reverbWet": 0.40,
+        "reverbCharacter": "natural",
+        "sounds": [
+          { "id": "drip1", "type": "waterDrip", "volume": 0.3 },
+          { "id": "drip2", "type": "waterDrip", "volume": 0.2 }
+        ]
+      }
+    },
+    {
+      "id": "cave_crossroads",
+      "name": "Bivio Sotterraneo",
+      "description": "Un incrocio di tunnel. Passaggi si aprono in ogni direzione.",
+      "connections": {
+        "north": "cave_hall",
+        "east": "cave_tunnel",
+        "south": "cave_chasm",
+        "west": "cave_pool"
+      },
+      "ambience": {
+        "type": "cave",
+        "reverbDecay": 2.8,
+        "reverbWet": 0.45,
+        "reverbCharacter": "natural",
+        "sounds": [
+          { "id": "drip1", "type": "waterDrip", "volume": 0.25 },
+          { "id": "wind1", "type": "wind", "volume": 0.08 }
+        ]
+      }
+    },
+    {
+      "id": "cave_pool",
+      "name": "Pozza Sotterranea",
+      "description": "Una pozza d'acqua cristallina. Una gemma blu luccica sul fondo.",
+      "connections": {
+        "north": null,
+        "east": "cave_crossroads",
+        "south": null,
+        "west": null
+      },
+      "ambience": {
+        "type": "cave-water",
+        "reverbDecay": 3.0,
+        "reverbWet": 0.50,
+        "reverbCharacter": "natural",
+        "sounds": [
+          { "id": "drip1", "type": "waterDrip", "volume": 0.35 }
+        ]
+      },
+      "item": {
+        "id": "gemma_blu",
+        "sound": "pickup",
+        "soundSignature": "crystalResonance",
+        "collected": false
+      }
+    },
+    {
+      "id": "cave_tunnel",
+      "name": "Cunicolo Stretto",
+      "description": "Un passaggio stretto. Una corda giace abbandonata per terra.",
+      "connections": {
+        "north": null,
+        "east": null,
+        "south": null,
+        "west": "cave_crossroads"
+      },
+      "ambience": {
+        "type": "cave-tight",
+        "reverbDecay": 1.8,
+        "reverbWet": 0.35,
+        "reverbCharacter": "natural",
+        "sounds": [
+          { "id": "drip1", "type": "waterDrip", "volume": 0.15 }
+        ]
+      },
+      "item": {
+        "id": "corda",
+        "sound": "pickup",
+        "soundSignature": "ropeSwish",
+        "collected": false
+      }
+    },
+    {
+      "id": "cave_chasm",
+      "name": "Voragine",
+      "description": "Un abisso si apre davanti a te. C'e' un passaggio dall'altra parte.",
+      "connections": {
+        "north": "cave_crossroads",
+        "east": null,
+        "south": "cave_deep",
+        "west": null
+      },
+      "ambience": {
+        "type": "cave-deep",
+        "reverbDecay": 3.5,
+        "reverbWet": 0.55,
+        "reverbCharacter": "natural",
+        "sounds": [
+          { "id": "wind1", "type": "wind", "volume": 0.2 },
+          { "id": "drip1", "type": "waterDrip", "volume": 0.1 }
+        ]
+      },
+      "lock": {
+        "id": "chasm_rope",
+        "requiredItem": "corda",
+        "requiredSignature": "ropeSwish",
+        "unlocks": "cave_chasm",
+        "unlocked": false
+      }
+    },
+    {
+      "id": "cave_deep",
+      "name": "Profondita'",
+      "description": "Le profondita' della grotta. Un cristallo alieno pulsa di luce strana.",
+      "connections": {
+        "north": "cave_chasm",
+        "east": null,
+        "south": "ship_airlock",
+        "west": null
+      },
+      "ambience": {
+        "type": "cave-alien",
+        "reverbDecay": 3.2,
+        "reverbWet": 0.48,
+        "reverbCharacter": "natural",
+        "sounds": [
+          { "id": "drip1", "type": "waterDrip", "volume": 0.1 },
+          { "id": "hum1", "type": "electricHum", "volume": 0.08 }
+        ]
+      },
+      "item": {
+        "id": "cristallo_alieno",
+        "sound": "pickup",
+        "soundSignature": "alienCrystal",
+        "collected": false
+      }
+    },
+    {
+      "id": "ship_airlock",
+      "name": "Camera Stagna",
+      "description": "Una camera stagna aliena. L'aria ha un odore metallico.",
+      "connections": {
+        "north": "cave_deep",
+        "east": null,
+        "south": "ship_corridor",
+        "west": null
+      },
+      "ambience": {
+        "type": "ship",
+        "reverbDecay": 1.5,
+        "reverbWet": 0.45,
+        "reverbCharacter": "metallic",
+        "sounds": [
+          { "id": "hum1", "type": "electricHum", "volume": 0.15 },
+          { "id": "breath1", "type": "mechanicalBreath", "volume": 0.12 }
+        ]
+      },
+      "lock": {
+        "id": "airlock_crystal",
+        "requiredItem": "cristallo_alieno",
+        "requiredSignature": "alienCrystal",
+        "unlocks": "ship_airlock",
+        "unlocked": false
+      }
+    },
+    {
+      "id": "ship_corridor",
+      "name": "Corridoio",
+      "description": "Un corridoio metallico. Pannelli dormiente fiancheggiano le pareti.",
+      "connections": {
+        "north": "ship_airlock",
+        "east": "ship_secret",
+        "south": "ship_bridge",
+        "west": null
+      },
+      "ambience": {
+        "type": "ship",
+        "reverbDecay": 1.8,
+        "reverbWet": 0.50,
+        "reverbCharacter": "metallic",
+        "sounds": [
+          { "id": "hum1", "type": "electricHum", "volume": 0.2 },
+          { "id": "breath1", "type": "mechanicalBreath", "volume": 0.18 }
+        ]
+      }
+    },
+    {
+      "id": "ship_secret",
+      "name": "Sala Ologrammi",
+      "description": "Una stanza segreta! Ologrammi alieni raccontano la storia della nave.",
+      "connections": {
+        "north": null,
+        "east": null,
+        "south": null,
+        "west": "ship_corridor"
+      },
+      "ambience": {
+        "type": "ship-secret",
+        "reverbDecay": 2.5,
+        "reverbWet": 0.60,
+        "reverbCharacter": "metallic",
+        "sounds": [
+          { "id": "hum1", "type": "electricHum", "volume": 0.1 }
+        ]
+      },
+      "lock": {
+        "id": "secret_gem",
+        "requiredItem": "gemma_blu",
+        "requiredSignature": "crystalResonance",
+        "unlocks": "ship_secret",
+        "unlocked": false
+      }
+    },
+    {
+      "id": "ship_bridge",
+      "name": "Ponte di Comando",
+      "description": "Il ponte di comando dell'astronave. Console dormono in attesa.",
+      "connections": {
+        "north": "ship_corridor",
+        "east": "ship_reactor",
+        "south": "ship_quarters",
+        "west": "ship_engineering"
+      },
+      "ambience": {
+        "type": "ship-bridge",
+        "reverbDecay": 2.0,
+        "reverbWet": 0.55,
+        "reverbCharacter": "metallic",
+        "sounds": [
+          { "id": "hum1", "type": "electricHum", "volume": 0.25 },
+          { "id": "breath1", "type": "mechanicalBreath", "volume": 0.2 }
+        ]
+      },
+      "lock": {
+        "id": "bridge_activation",
+        "requiredItem": "activation_key",
+        "requiredSignature": "techBeep",
+        "unlocks": "victory",
+        "unlocked": false
+      }
+    },
+    {
+      "id": "ship_engineering",
+      "name": "Sala Motori",
+      "description": "La sala motori. Macchinari silenziosi attendono energia.",
+      "connections": {
+        "north": null,
+        "east": "ship_bridge",
+        "south": null,
+        "west": null
+      },
+      "ambience": {
+        "type": "ship-engineering",
+        "reverbDecay": 1.6,
+        "reverbWet": 0.48,
+        "reverbCharacter": "metallic",
+        "sounds": [
+          { "id": "hum1", "type": "electricHum", "volume": 0.3 },
+          { "id": "breath1", "type": "mechanicalBreath", "volume": 0.1 }
+        ]
+      },
+      "item": {
+        "id": "activation_key",
+        "sound": "pickup",
+        "soundSignature": "techBeep",
+        "collected": false
+      },
+      "lock": {
+        "id": "engineering_power",
+        "requiredItem": "power_cell",
+        "requiredSignature": "electricBuzz",
+        "unlocks": "ship_engineering",
+        "unlocked": false
+      }
+    },
+    {
+      "id": "ship_reactor",
+      "name": "Nucleo Reattore",
+      "description": "Il nucleo del reattore. Silenzioso e freddo, aspetta carburante.",
+      "connections": {
+        "north": null,
+        "east": null,
+        "south": null,
+        "west": "ship_bridge"
+      },
+      "ambience": {
+        "type": "ship-reactor",
+        "reverbDecay": 1.4,
+        "reverbWet": 0.52,
+        "reverbCharacter": "metallic",
+        "sounds": [
+          { "id": "hum1", "type": "electricHum", "volume": 0.2 }
+        ]
+      },
+      "lock": {
+        "id": "reactor_fuel",
+        "requiredItem": "fuel_cell",
+        "requiredSignature": "liquidGurgle",
+        "unlocks": "ship_reactor",
+        "unlocked": false
+      }
+    },
+    {
+      "id": "ship_quarters",
+      "name": "Alloggi",
+      "description": "Gli alloggi dell'equipaggio. Una cella di carburante giace su un tavolo.",
+      "connections": {
+        "north": "ship_bridge",
+        "east": "ship_storage",
+        "south": null,
+        "west": null
+      },
+      "ambience": {
+        "type": "ship-quarters",
+        "reverbDecay": 1.2,
+        "reverbWet": 0.40,
+        "reverbCharacter": "metallic",
+        "sounds": [
+          { "id": "hum1", "type": "electricHum", "volume": 0.12 },
+          { "id": "breath1", "type": "mechanicalBreath", "volume": 0.15 }
+        ]
+      },
+      "item": {
+        "id": "fuel_cell",
+        "sound": "pickup",
+        "soundSignature": "liquidGurgle",
+        "collected": false
+      }
+    },
+    {
+      "id": "ship_storage",
+      "name": "Magazzino",
+      "description": "Il magazzino della nave. Una cella di energia emette un ronzio debole.",
+      "connections": {
+        "north": null,
+        "east": null,
+        "south": null,
+        "west": "ship_quarters"
+      },
+      "ambience": {
+        "type": "ship-storage",
+        "reverbDecay": 1.3,
+        "reverbWet": 0.42,
+        "reverbCharacter": "metallic",
+        "sounds": [
+          { "id": "hum1", "type": "electricHum", "volume": 0.1 }
+        ]
+      },
+      "item": {
+        "id": "power_cell",
+        "sound": "pickup",
+        "soundSignature": "electricBuzz",
+        "collected": false
+      }
+    }
+  ]
+}

@@ -7,19 +7,21 @@ import { Movement } from './game/Movement';
 import { Interaction } from './game/Interaction';
 import { InputHandler } from './input/InputHandler';
 import { Minimap } from './ui/Minimap';
-import testLevel from './data/levels/test-level.json';
-import type { LevelData } from './types';
+import { InventoryUI } from './ui/InventoryUI';
+import { RoomInfoUI } from './ui/RoomInfoUI';
+import alienAdventure from './data/levels/alien-adventure.json';
+import type { LevelData, SaveData } from './types';
 
 /**
  * In The Dark - Audio Game
  * Entry point principale
  */
 
-// Elementi DOM (con validazione)
+// DOM elements (with validation)
 function getRequiredElement(id: string): HTMLElement {
   const element = document.getElementById(id);
   if (!element) {
-    throw new Error(`Elemento DOM richiesto non trovato: #${id}`);
+    throw new Error(`Required DOM element not found: #${id}`);
   }
   return element;
 }
@@ -27,102 +29,174 @@ function getRequiredElement(id: string): HTMLElement {
 const startScreen = getRequiredElement('start-screen');
 const gameScreen = getRequiredElement('game-screen');
 const minimapElement = getRequiredElement('minimap');
+const inventoryElement = getRequiredElement('inventory');
+const controlsHelpElement = getRequiredElement('controls-help');
+const roomInfoElement = getRequiredElement('room-info');
+const btnNewGame = getRequiredElement('btn-new-game') as HTMLButtonElement;
+const btnLoadGame = getRequiredElement('btn-load-game') as HTMLButtonElement;
 
-// Stato globale
+// Global state
 let gameState: GameState;
 let movement: Movement;
 let inputHandler: InputHandler;
 let minimap: Minimap;
+let inventoryUI: InventoryUI;
+let roomInfoUI: RoomInfoUI;
 
 /**
- * Aggiorna la UI (minimap)
+ * Updates all UI components
  */
 function updateUI(): void {
   if (minimap) {
     minimap.render();
   }
+  if (inventoryUI) {
+    inventoryUI.render();
+  }
+  if (roomInfoUI) {
+    roomInfoUI.render();
+  }
 }
 
 /**
- * Inizializza il gioco dopo l'interazione utente
+ * Handle save game action
  */
-async function startGame(): Promise<void> {
-  console.log('Avvio gioco...');
+function handleSaveGame(): void {
+  if (gameState) {
+    const success = gameState.save();
+    if (success) {
+      audioEngine.playSaveConfirm();
+    }
+  }
+}
 
-  // Inizializza audio
-  await audioEngine.init();
+/**
+ * Initialize game systems with given state
+ */
+async function initializeGame(state: GameState, saveData?: SaveData): Promise<void> {
+  gameState = state;
 
-  // Carica livello di test
-  graphWorld.loadLevel(testLevel as LevelData);
-  graphWorld.debugLog();
-
-  // Inizializza stato giocatore
-  gameState = new GameState(
-    graphWorld.getStartNode(),
-    graphWorld.getStartOrientation()
-  );
-  gameState.debugLog();
-
-  // Inizializza sistema movimento
+  // Initialize movement system
   movement = new Movement(gameState);
 
-  // Inizializza sistema sonar
+  // Initialize sonar system
   const sonar = new Sonar(audioEngine, graphWorld, gameState);
   movement.setSonar(sonar);
 
-  // Inizializza sistema ambiente
+  // Initialize ambience system
   const ambienceManager = new AmbienceManager(audioEngine);
   ambienceManager.init();
   movement.setAmbienceManager(ambienceManager);
 
-  // Imposta ambiente iniziale
-  const startNode = graphWorld.getNode(graphWorld.getStartNode());
-  if (startNode?.ambience) {
-    ambienceManager.setAmbience(startNode.ambience);
+  // Set ambience for current room
+  const currentNode = graphWorld.getNode(gameState.currentNode);
+  if (currentNode?.ambience) {
+    ambienceManager.setAmbience(currentNode.ambience);
   }
 
-  // Inizializza sistema interazione
+  // Initialize interaction system
   const interaction = new Interaction(gameState, graphWorld);
 
-  // Inizializza minimap
+  // Initialize minimap
   minimap = new Minimap(minimapElement, graphWorld, gameState);
 
-  // Inizializza input handler con callback per aggiornare UI
+  // Initialize inventory UI
+  inventoryUI = new InventoryUI(inventoryElement, gameState);
+
+  // Initialize room info UI
+  roomInfoUI = new RoomInfoUI(roomInfoElement, gameState, graphWorld);
+
+  // Initialize input handler with callbacks
   inputHandler = new InputHandler(movement, updateUI);
   inputHandler.setInteraction(interaction);
-  inputHandler.setMinimap(minimap);
+  inputHandler.setGameState(gameState);
+  inputHandler.setOnSave(handleSaveGame);
   inputHandler.enable();
 
-  // Aggiorna UI
+  // Update UI and show game screen
   startScreen.classList.add('hidden');
   gameScreen.classList.add('active');
+  controlsHelpElement.classList.add('active');
+  roomInfoUI.setVisible(true);
   updateUI();
 
-  // Feedback presenza oggetto nel nodo iniziale
-  if (startNode?.item && !startNode.item.collected) {
+  // Item presence feedback in starting room (only for new game)
+  if (!saveData && currentNode?.item && !currentNode.item.collected) {
     audioEngine.playItemPresence();
   }
 
-  console.log('Gioco avviato! Usa le frecce per muoverti.');
+  console.log('Game initialized!');
 }
 
-// Event listener per avvio gioco
-function handleStart(event: Event): void {
-  event.preventDefault();
+/**
+ * Start new game
+ */
+async function startNewGame(): Promise<void> {
+  console.log('Starting new game...');
 
-  // Rimuovi listener dopo primo input
-  startScreen.removeEventListener('click', handleStart);
-  document.removeEventListener('keydown', handleStartKey);
+  // Initialize audio
+  await audioEngine.init();
 
-  startGame();
+  // Load level
+  graphWorld.loadLevel(alienAdventure as LevelData);
+  graphWorld.debugLog();
+
+  // Create new game state
+  const state = new GameState(
+    graphWorld.getStartNode(),
+    graphWorld.getStartOrientation()
+  );
+  state.debugLog();
+
+  await initializeGame(state);
+  console.log('New game started! Use arrow keys to move.');
 }
 
-function handleStartKey(event: KeyboardEvent): void {
-  handleStart(event);
+/**
+ * Load saved game
+ */
+async function loadSavedGame(): Promise<void> {
+  console.log('Loading saved game...');
+
+  const saveData = GameState.loadSaveData();
+  if (!saveData) {
+    console.error('No save data found');
+    return;
+  }
+
+  // Initialize audio
+  await audioEngine.init();
+
+  // Load level
+  graphWorld.loadLevel(alienAdventure as LevelData);
+
+  // Mark collected items in the world
+  graphWorld.markItemsCollected(saveData.collectedItems);
+
+  // Restore game state
+  const state = GameState.fromSaveData(saveData);
+  state.debugLog();
+
+  await initializeGame(state, saveData);
+  console.log('Game loaded!');
 }
 
-// Attendi interazione utente per avviare
-startScreen.addEventListener('click', handleStart);
-document.addEventListener('keydown', handleStartKey);
+// Check for saved game on page load
+if (GameState.hasSavedGame()) {
+  btnLoadGame.classList.remove('hidden');
+}
 
-console.log('In The Dark - Premi un tasto per iniziare');
+// Event listeners for buttons
+btnNewGame.addEventListener('click', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  startNewGame();
+});
+
+btnLoadGame.addEventListener('click', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  loadSavedGame();
+});
+
+console.log('In The Dark - Select an option to start');

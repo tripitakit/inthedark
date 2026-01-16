@@ -7,7 +7,7 @@ import { audioEngine } from '../audio/AudioEngine';
  * Risultato di un'interazione
  */
 export type InteractionResult = {
-  type: 'pickup' | 'unlock' | 'error' | 'nothing';
+  type: 'pickup' | 'unlock' | 'victory' | 'error' | 'nothing';
   message: string;
   item?: GameItem;
 };
@@ -16,8 +16,8 @@ export type InteractionResult = {
  * Interaction - Gestisce le interazioni del giocatore
  *
  * Logica:
- * 1. Se c'è un item nel nodo corrente e non raccolto → raccoglilo
- * 2. Se tieni un item e c'è un lock davanti → prova a usarlo
+ * 1. Se c'è un item nel nodo corrente e non raccolto → raccoglilo (aggiunge all'inventario)
+ * 2. Se hai un item selezionato e c'è un lock davanti → prova a usarlo
  * 3. Altrimenti → nessuna interazione disponibile
  */
 export class Interaction {
@@ -70,22 +70,17 @@ export class Interaction {
       return { type: 'nothing', message: '' };
     }
 
-    // Verifica se il giocatore ha già un oggetto
-    if (this.gameState.heldItem !== null) {
-      audioEngine.playError();
-      return {
-        type: 'error',
-        message: 'Hai già un oggetto in mano',
-      };
-    }
-
-    // Raccogli l'oggetto
+    // Raccogli l'oggetto e aggiungilo all'inventario
     const item = node.item;
     item.collected = true;
-    this.gameState.pickUpItem(item);
+    this.gameState.addToInventory(item);
 
+    // Feedback audio: pickup generico + firma sonora dell'oggetto
     audioEngine.playPickup();
-    console.log(`Raccolto: ${item.id}`);
+    setTimeout(() => {
+      audioEngine.playItemSignature(item.soundSignature);
+    }, 150); // Piccolo delay per separare i suoni
+    console.log(`Raccolto: ${item.id} (inventario: ${this.gameState.inventory.length})`);
 
     return {
       type: 'pickup',
@@ -95,11 +90,11 @@ export class Interaction {
   }
 
   /**
-   * Tenta di usare l'oggetto tenuto su un lock nella direzione corrente
+   * Tenta di usare l'oggetto selezionato su un lock nella direzione corrente
    */
   private tryUseItem(): InteractionResult {
-    const heldItem = this.gameState.heldItem;
-    if (!heldItem) {
+    const selectedItem = this.gameState.selectedItem;
+    if (!selectedItem) {
       return { type: 'nothing', message: '' };
     }
 
@@ -118,7 +113,7 @@ export class Interaction {
     }
 
     // Verifica se l'oggetto è quello giusto
-    if (lock.requiredItem !== heldItem.id) {
+    if (lock.requiredItem !== selectedItem.id) {
       audioEngine.playError();
       return {
         type: 'error',
@@ -126,17 +121,28 @@ export class Interaction {
       };
     }
 
-    // Sblocca il passaggio e consuma l'oggetto
+    // Sblocca il passaggio e rimuovi l'oggetto dall'inventario
     this.gameState.unlockPassage(lock.id);
-    this.gameState.dropItem();
+    this.gameState.removeSelectedItem();
+
+    // Verifica condizione di vittoria
+    if (lock.unlocks === 'victory') {
+      console.log('=== VITTORIA! Sequenza di lancio avviata! ===');
+      audioEngine.playLaunchSequence();
+      return {
+        type: 'victory',
+        message: 'Hai attivato l\'astronave! Decollo in corso...',
+        item: selectedItem,
+      };
+    }
 
     audioEngine.playUnlock();
-    console.log(`Sbloccato: ${lock.id} con ${heldItem.id}`);
+    console.log(`Sbloccato: ${lock.id} con ${selectedItem.id}`);
 
     return {
       type: 'unlock',
-      message: `Hai sbloccato il passaggio con ${heldItem.id}`,
-      item: heldItem,
+      message: `Hai sbloccato il passaggio con ${selectedItem.id}`,
+      item: selectedItem,
     };
   }
 }

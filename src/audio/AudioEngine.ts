@@ -1,4 +1,4 @@
-import type { Direction } from '../types';
+import type { Direction, ItemSoundSignature } from '../types';
 
 // Configurazione bussola per ogni direzione cardinale
 // Frequenze: Nord/Sud = Do (C), Est/Ovest = Sol (G)
@@ -478,6 +478,37 @@ export class AudioEngine {
   }
 
   /**
+   * Plays confirmation sound when game is saved
+   * Ascending two-tone chime: clear and satisfying
+   */
+  playSaveConfirm(): void {
+    if (!this.context || !this.masterGain) return;
+
+    const now = this.context.currentTime;
+    const notes = [600, 900]; // Ascending two-note chime
+    const noteDuration = 0.15;
+
+    for (let i = 0; i < notes.length; i++) {
+      const startTime = now + i * 0.1;
+
+      const osc = this.context.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = notes[i];
+
+      const gain = this.context.createGain();
+      gain.gain.setValueAtTime(0, startTime);
+      gain.gain.linearRampToValueAtTime(0.25, startTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.01, startTime + noteDuration);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.start(startTime);
+      osc.stop(startTime + noteDuration);
+    }
+  }
+
+  /**
    * Riproduce suono "vuoto/hollow" per pickup fallito
    * Tono basso sordo che indica "niente qui"
    */
@@ -550,6 +581,536 @@ export class AudioEngine {
     osc1.stop(now + 0.12);
     osc2.start(now);
     osc2.stop(now + 0.12);
+  }
+
+  // ========================================
+  // FIRME SONORE OGGETTI INVENTARIO
+  // ========================================
+
+  /**
+   * Riproduce la firma sonora di un oggetto
+   */
+  playItemSignature(signature: ItemSoundSignature): void {
+    switch (signature) {
+      case 'glassChime': this.playGlassChime(); break;
+      case 'metalScrape': this.playMetalScrape(); break;
+      case 'ropeSwish': this.playRopeSwish(); break;
+      case 'crystalResonance': this.playCrystalResonance(); break;
+      case 'alienCrystal': this.playAlienCrystal(); break;
+      case 'electricBuzz': this.playElectricBuzz(); break;
+      case 'liquidGurgle': this.playLiquidGurgle(); break;
+      case 'techBeep': this.playTechBeep(); break;
+      default:
+        console.warn(`Unknown item signature: ${signature}`);
+    }
+  }
+
+  /**
+   * Riproduce un eco filtrato della firma sonora (hint per serratura)
+   * Suono più smorzato e distante per indicare quale oggetto serve
+   */
+  playSignatureEcho(signature: ItemSoundSignature): void {
+    if (!this.context || !this.masterGain) return;
+
+    console.log(`Playing signature echo: ${signature}`);
+
+    // Boost volume for lock hint - needs to be clearly audible
+    const echoGain = this.context.createGain();
+    echoGain.gain.value = 1.2; // Boosted for lock hints
+
+    // Gentle lowpass filter - don't muffle too much
+    const filter = this.context.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 2500; // Higher cutoff for clarity
+    filter.Q.value = 0.5;
+
+    // Salva il master gain originale e sostituisci temporaneamente
+    const originalMaster = this.masterGain;
+
+    // Crea una catena temporanea
+    filter.connect(echoGain);
+    echoGain.connect(originalMaster);
+
+    // Temporaneamente usa il filtro come destinazione
+    this.masterGain = filter;
+
+    // Riproduci la firma attraverso il filtro
+    this.playItemSignature(signature);
+
+    // Ripristina il master gain
+    this.masterGain = originalMaster;
+
+    // Pulisci dopo un po'
+    setTimeout(() => {
+      filter.disconnect();
+      echoGain.disconnect();
+    }, 1000);
+  }
+
+  /**
+   * Tintinnio cristallino (lanterna) - 2000-3000Hz, armonici puri
+   */
+  private playGlassChime(): void {
+    if (!this.context || !this.masterGain) return;
+
+    const now = this.context.currentTime;
+    const frequencies = [2400, 3000, 3600]; // Armonici cristallini
+
+    for (let i = 0; i < frequencies.length; i++) {
+      const startTime = now + i * 0.05;
+      const osc = this.context.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = frequencies[i];
+
+      const gain = this.context.createGain();
+      gain.gain.setValueAtTime(0.15 - i * 0.03, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.start(startTime);
+      osc.stop(startTime + 0.3);
+    }
+  }
+
+  /**
+   * Raschio metallico (coltello) - 800-1500Hz, noise filtrato tagliente
+   */
+  private playMetalScrape(): void {
+    if (!this.context || !this.masterGain) return;
+
+    const now = this.context.currentTime;
+    const duration = 0.2;
+    const bufferSize = Math.floor(this.context.sampleRate * duration);
+    const buffer = this.context.createBuffer(1, bufferSize, this.context.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    for (let i = 0; i < bufferSize; i++) {
+      const t = i / bufferSize;
+      const envelope = Math.exp(-t * 8);
+      data[i] = (Math.random() * 2 - 1) * envelope;
+    }
+
+    const source = this.context.createBufferSource();
+    source.buffer = buffer;
+
+    const filter = this.context.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(800, now);
+    filter.frequency.linearRampToValueAtTime(1500, now + 0.1);
+    filter.Q.value = 8;
+
+    const gain = this.context.createGain();
+    gain.gain.value = 0.25;
+
+    source.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.masterGain);
+
+    source.start(now);
+    source.stop(now + duration);
+  }
+
+  /**
+   * Fruscio fibra (corda) - noise 400-800Hz, distinctive whoosh
+   */
+  private playRopeSwish(): void {
+    if (!this.context || !this.masterGain) return;
+
+    const now = this.context.currentTime;
+    const duration = 0.4; // Longer for better audibility
+    const bufferSize = Math.floor(this.context.sampleRate * duration);
+    const buffer = this.context.createBuffer(1, bufferSize, this.context.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    for (let i = 0; i < bufferSize; i++) {
+      const t = i / bufferSize;
+      // Envelope che cresce e poi decade (whoosh)
+      const envelope = Math.sin(t * Math.PI) * Math.exp(-t * 2);
+      data[i] = (Math.random() * 2 - 1) * envelope;
+    }
+
+    const source = this.context.createBufferSource();
+    source.buffer = buffer;
+
+    const filter = this.context.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = 800; // Higher for more presence
+    filter.Q.value = 1.5;
+
+    const gain = this.context.createGain();
+    gain.gain.value = 0.5; // Much louder
+
+    source.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.masterGain);
+
+    source.start(now);
+    source.stop(now + duration);
+  }
+
+  /**
+   * Risonanza eterea (gemma_blu) - sine 600Hz + armonici, lungo sustain
+   */
+  private playCrystalResonance(): void {
+    if (!this.context || !this.masterGain) return;
+
+    const now = this.context.currentTime;
+    const baseFreq = 600;
+    const harmonics = [1, 2, 3, 5]; // Armonici dispari per suono etereo
+
+    for (const harmonic of harmonics) {
+      const osc = this.context.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = baseFreq * harmonic;
+
+      const gain = this.context.createGain();
+      const volume = 0.12 / harmonic;
+      gain.gain.setValueAtTime(volume, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.start(now);
+      osc.stop(now + 0.5);
+    }
+  }
+
+  /**
+   * Pulsazione aliena (cristallo_alieno) - sweep 200-800Hz, distinctive alien sound
+   */
+  private playAlienCrystal(): void {
+    if (!this.context || !this.masterGain) return;
+
+    const now = this.context.currentTime;
+
+    const osc = this.context.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(200, now);
+    osc.frequency.exponentialRampToValueAtTime(800, now + 0.2);
+    osc.frequency.exponentialRampToValueAtTime(300, now + 0.5);
+
+    // Secondo oscillatore per battimenti alieni
+    const osc2 = this.context.createOscillator();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(205, now);
+    osc2.frequency.exponentialRampToValueAtTime(810, now + 0.2);
+    osc2.frequency.exponentialRampToValueAtTime(305, now + 0.5);
+
+    const gain = this.context.createGain();
+    gain.gain.setValueAtTime(0.4, now); // Much louder
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.55);
+
+    osc.connect(gain);
+    osc2.connect(gain);
+    gain.connect(this.masterGain);
+
+    osc.start(now);
+    osc.stop(now + 0.55);
+    osc2.start(now);
+    osc2.stop(now + 0.55);
+  }
+
+  /**
+   * Ronzio elettrico (power_cell) - 60Hz + armoniche, buzz costante
+   */
+  private playElectricBuzz(): void {
+    if (!this.context || !this.masterGain) return;
+
+    const now = this.context.currentTime;
+    const baseFreq = 60;
+
+    // Fondamentale + armoniche pari (tipiche del ronzio elettrico)
+    for (let i = 1; i <= 4; i++) {
+      const osc = this.context.createOscillator();
+      osc.type = i === 1 ? 'sawtooth' : 'sine';
+      osc.frequency.value = baseFreq * i * 2;
+
+      const gain = this.context.createGain();
+      const volume = 0.08 / i;
+      gain.gain.setValueAtTime(volume, now);
+      gain.gain.setValueAtTime(volume, now + 0.2);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.start(now);
+      osc.stop(now + 0.3);
+    }
+  }
+
+  /**
+   * Gorgoglio chimico (fuel_cell) - noise modulato, liquido
+   */
+  private playLiquidGurgle(): void {
+    if (!this.context || !this.masterGain) return;
+
+    const now = this.context.currentTime;
+    const duration = 0.35;
+    const bufferSize = Math.floor(this.context.sampleRate * duration);
+    const buffer = this.context.createBuffer(1, bufferSize, this.context.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    // Noise con modulazione "gorgogliante"
+    for (let i = 0; i < bufferSize; i++) {
+      const t = i / this.context.sampleRate;
+      const modulation = Math.sin(t * 25) * 0.5 + 0.5; // Gorgoglio a 25Hz
+      const envelope = Math.exp(-t * 4);
+      data[i] = (Math.random() * 2 - 1) * envelope * modulation;
+    }
+
+    const source = this.context.createBufferSource();
+    source.buffer = buffer;
+
+    const filter = this.context.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 400;
+    filter.Q.value = 3;
+
+    const gain = this.context.createGain();
+    gain.gain.value = 0.25;
+
+    source.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.masterGain);
+
+    source.start(now);
+    source.stop(now + duration);
+  }
+
+  /**
+   * Sequenza beep digitali (activation_key) - 800-1200Hz, pattern ritmico
+   */
+  private playTechBeep(): void {
+    if (!this.context || !this.masterGain) return;
+
+    const now = this.context.currentTime;
+    const beeps = [
+      { freq: 1000, time: 0, dur: 0.06 },
+      { freq: 1200, time: 0.08, dur: 0.06 },
+      { freq: 800, time: 0.16, dur: 0.06 },
+      { freq: 1000, time: 0.24, dur: 0.1 },
+    ];
+
+    for (const beep of beeps) {
+      const osc = this.context.createOscillator();
+      osc.type = 'square';
+      osc.frequency.value = beep.freq;
+
+      const filter = this.context.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 2000;
+
+      const gain = this.context.createGain();
+      gain.gain.setValueAtTime(0.12, now + beep.time);
+      gain.gain.setValueAtTime(0.12, now + beep.time + beep.dur - 0.01);
+      gain.gain.linearRampToValueAtTime(0, now + beep.time + beep.dur);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.start(now + beep.time);
+      osc.stop(now + beep.time + beep.dur);
+    }
+  }
+
+  // ========================================
+  // SEQUENZA VITTORIA
+  // ========================================
+
+  /**
+   * Riproduce la sequenza di lancio dell'astronave (vittoria!)
+   * Durata totale: ~15 secondi
+   */
+  playLaunchSequence(): void {
+    if (!this.context || !this.masterGain) return;
+
+    const now = this.context.currentTime;
+
+    // 1. IGNITION (0-2s): Rombo crescente basso
+    this.playIgnition(now);
+
+    // 2. POWER SURGE (2-4s): Sweep ascendente
+    this.playPowerSurge(now + 2);
+
+    // 3. LIFTOFF (4-8s): Rumble sostenuto
+    this.playLiftoff(now + 4);
+
+    // 4. ACCELERATION (8-12s): Pitch crescente
+    this.playAcceleration(now + 8);
+
+    // 5. VICTORY FANFARE (12-15s): Accordo trionfale
+    this.playVictoryFanfare(now + 12);
+  }
+
+  private playIgnition(startTime: number): void {
+    if (!this.context || !this.masterGain) return;
+
+    const osc = this.context.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(30, startTime);
+    osc.frequency.exponentialRampToValueAtTime(60, startTime + 2);
+
+    const filter = this.context.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 100;
+
+    const gain = this.context.createGain();
+    gain.gain.setValueAtTime(0, startTime);
+    gain.gain.linearRampToValueAtTime(0.4, startTime + 0.5);
+    gain.gain.setValueAtTime(0.4, startTime + 1.8);
+    gain.gain.linearRampToValueAtTime(0.5, startTime + 2);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.masterGain);
+
+    osc.start(startTime);
+    osc.stop(startTime + 2);
+  }
+
+  private playPowerSurge(startTime: number): void {
+    if (!this.context || !this.masterGain) return;
+
+    const osc = this.context.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(100, startTime);
+    osc.frequency.exponentialRampToValueAtTime(800, startTime + 2);
+
+    const gain = this.context.createGain();
+    gain.gain.setValueAtTime(0.3, startTime);
+    gain.gain.linearRampToValueAtTime(0.5, startTime + 1);
+    gain.gain.linearRampToValueAtTime(0.3, startTime + 2);
+
+    osc.connect(gain);
+    gain.connect(this.masterGain);
+
+    osc.start(startTime);
+    osc.stop(startTime + 2);
+  }
+
+  private playLiftoff(startTime: number): void {
+    if (!this.context || !this.masterGain) return;
+
+    // Noise per rumble
+    const duration = 4;
+    const bufferSize = Math.floor(this.context.sampleRate * duration);
+    const buffer = this.context.createBuffer(1, bufferSize, this.context.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+
+    const source = this.context.createBufferSource();
+    source.buffer = buffer;
+
+    const filter = this.context.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 150;
+
+    const gain = this.context.createGain();
+    gain.gain.setValueAtTime(0.4, startTime);
+    gain.gain.setValueAtTime(0.4, startTime + 3.5);
+    gain.gain.linearRampToValueAtTime(0.2, startTime + 4);
+
+    // Bass oscillator per profondita'
+    const bassOsc = this.context.createOscillator();
+    bassOsc.type = 'sine';
+    bassOsc.frequency.value = 40;
+
+    const bassGain = this.context.createGain();
+    bassGain.gain.setValueAtTime(0.3, startTime);
+    bassGain.gain.setValueAtTime(0.3, startTime + 3.5);
+    bassGain.gain.linearRampToValueAtTime(0.1, startTime + 4);
+
+    source.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.masterGain);
+
+    bassOsc.connect(bassGain);
+    bassGain.connect(this.masterGain);
+
+    source.start(startTime);
+    source.stop(startTime + duration);
+    bassOsc.start(startTime);
+    bassOsc.stop(startTime + duration);
+  }
+
+  private playAcceleration(startTime: number): void {
+    if (!this.context || !this.masterGain) return;
+
+    const osc = this.context.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(80, startTime);
+    osc.frequency.exponentialRampToValueAtTime(400, startTime + 4);
+
+    const filter = this.context.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(200, startTime);
+    filter.frequency.exponentialRampToValueAtTime(2000, startTime + 4);
+
+    const gain = this.context.createGain();
+    gain.gain.setValueAtTime(0.25, startTime);
+    gain.gain.linearRampToValueAtTime(0.35, startTime + 2);
+    gain.gain.linearRampToValueAtTime(0.1, startTime + 4);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.masterGain);
+
+    osc.start(startTime);
+    osc.stop(startTime + 4);
+  }
+
+  private playVictoryFanfare(startTime: number): void {
+    if (!this.context || !this.masterGain) return;
+
+    // Accordo maggiore trionfale: Do-Mi-Sol-Do
+    const frequencies = [261.63, 329.63, 392.00, 523.25]; // C4-E4-G4-C5
+    const duration = 3;
+
+    for (const freq of frequencies) {
+      const osc = this.context.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+
+      const gain = this.context.createGain();
+      gain.gain.setValueAtTime(0, startTime);
+      gain.gain.linearRampToValueAtTime(0.2, startTime + 0.2);
+      gain.gain.setValueAtTime(0.2, startTime + 2);
+      gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.start(startTime);
+      osc.stop(startTime + duration);
+    }
+
+    // Arpeggio finale
+    const arpeggioNotes = [523.25, 659.26, 783.99, 1046.50]; // C5-E5-G5-C6
+    for (let i = 0; i < arpeggioNotes.length; i++) {
+      const osc = this.context.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = arpeggioNotes[i];
+
+      const gain = this.context.createGain();
+      const noteStart = startTime + 0.5 + i * 0.15;
+      gain.gain.setValueAtTime(0, noteStart);
+      gain.gain.linearRampToValueAtTime(0.15, noteStart + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.01, noteStart + 0.5);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.start(noteStart);
+      osc.stop(noteStart + 0.5);
+    }
   }
 }
 

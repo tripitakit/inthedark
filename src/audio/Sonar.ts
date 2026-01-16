@@ -1,6 +1,7 @@
 import { AudioEngine } from './AudioEngine';
 import { GraphWorld } from '../game/GraphWorld';
 import { GameState } from '../game/GameState';
+import type { ItemSoundSignature } from '../types';
 
 // Timing della sequenza sonar (in millisecondi)
 const TIMING = {
@@ -8,7 +9,7 @@ const TIMING = {
   PING_DELAY: 350,         // Delay prima del ping
   ECHO_WALL_DELAY: 150,    // Eco breve = muro vicino (no passaggio)
   ECHO_PASSAGE_DELAY: 450, // Eco lungo = spazio aperto (passaggio)
-  LOCK_SOUND_DELAY: 100,   // Delay dopo eco per suono serratura
+  LOCK_SOUND_DELAY: 400,   // Delay dopo eco - gives time for echo to finish
 };
 
 /**
@@ -56,6 +57,7 @@ export class Sonar {
     const targetNode = this.graphWorld.getConnection(currentNode, orientation);
     let hasPassageAhead = targetNode !== null;
     let hasLockedDoor = false;
+    let lockSignature: ItemSoundSignature | null = null;
 
     // Se c'è connessione, verifica se è bloccata da lock
     if (hasPassageAhead && targetNode) {
@@ -63,9 +65,12 @@ export class Sonar {
       this.gameState.discoverEdge(currentNode, orientation);
 
       const lock = this.graphWorld.getLock(currentNode, orientation);
+      console.log(`Sonar lock check: ${currentNode} → ${orientation}, lock:`, lock);
       if (lock && !this.gameState.isPassageUnlocked(lock.id)) {
         hasPassageAhead = false; // Passaggio bloccato = muro
         hasLockedDoor = true;    // Ma c'è una serratura
+        lockSignature = lock.requiredSignature; // Firma dell'oggetto richiesto
+        console.log(`Sonar detected locked door, signature hint: ${lockSignature}`);
       }
     }
 
@@ -86,10 +91,10 @@ export class Sonar {
       this.audioEngine.playEchoFiltered(hasPassageAhead);
     }, TIMING.PING_DELAY + echoDelay);
 
-    // 4. Suono serratura (se c'è lock chiuso)
-    if (hasLockedDoor) {
+    // 4. Eco firma oggetto richiesto (se c'è lock chiuso)
+    if (hasLockedDoor && lockSignature) {
       setTimeout(() => {
-        this.audioEngine.playLockPresence();
+        this.audioEngine.playSignatureEcho(lockSignature!);
       }, TIMING.PING_DELAY + echoDelay + TIMING.LOCK_SOUND_DELAY);
     }
 

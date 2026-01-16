@@ -27,6 +27,7 @@
       "item": {
         "id": "chiave_nord",
         "sound": "key",
+        "soundSignature": "glassChime",
         "collected": false
       }
     },
@@ -53,6 +54,7 @@
       "lock": {
         "id": "porta_nord",
         "requiredItem": "chiave_nord",
+        "requiredSignature": "glassChime",
         "unlocks": "nord",
         "unlocked": false
       }
@@ -80,6 +82,7 @@
       "item": {
         "id": "chiave_ovest",
         "sound": "key",
+        "soundSignature": "metalScrape",
         "collected": false
       }
     },
@@ -125,6 +128,7 @@
       "lock": {
         "id": "porta_ovest",
         "requiredItem": "chiave_ovest",
+        "requiredSignature": "metalScrape",
         "unlocks": "ovest",
         "unlocked": false
       }

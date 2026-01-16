@@ -62,6 +62,11 @@ export class Movement {
       // Movimento valido: riproduci 4 passi prima di entrare nel nuovo nodo
       await audioEngine.playFootsteps();
 
+      // Discover the edge we're walking through (both directions)
+      this.gameState.discoverEdge(currentNode, direction);
+      const oppositeDirection = ROTATION_RIGHT[ROTATION_RIGHT[direction]];
+      this.gameState.discoverEdge(targetNode, oppositeDirection);
+
       // Ora entra nel nuovo nodo
       this.gameState.setCurrentNode(targetNode);
 
@@ -116,6 +121,20 @@ export class Movement {
     audioEngine.playCompassTone(newOrientation);
 
     console.log(`Rotazione destra: ${oldOrientation} → ${newOrientation}`);
+  }
+
+  /**
+   * Ruota di 180° (dietrofront)
+   */
+  turnAround(): void {
+    const oldOrientation = this.gameState.orientation;
+    // Due rotazioni a destra = 180°
+    const newOrientation = ROTATION_RIGHT[ROTATION_RIGHT[oldOrientation]];
+
+    this.gameState.setOrientation(newOrientation);
+    audioEngine.playCompassTone(newOrientation);
+
+    console.log(`Dietrofront: ${oldOrientation} → ${newOrientation}`);
   }
 
   /**

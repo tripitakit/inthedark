@@ -65,6 +65,7 @@ export class GraphWorld {
   /**
    * Ottiene il lock che blocca una connessione (se esiste)
    * Il lock è definito sul nodo di destinazione
+   * Note: locks with unlocks="victory" don't block entry - they're interaction locks
    */
   getLock(nodeId: string, direction: Direction): Lock | null {
     const targetNodeId = this.getConnection(nodeId, direction);
@@ -73,7 +74,25 @@ export class GraphWorld {
     const targetNode = this.nodes.get(targetNodeId);
     if (!targetNode) return null;
 
-    return targetNode.lock ?? null;
+    const lock = targetNode.lock ?? null;
+
+    // Victory locks don't block entry - they're used via interaction inside the room
+    if (lock && lock.unlocks === 'victory') {
+      return null;
+    }
+
+    return lock;
+  }
+
+  /**
+   * Marks items as collected (used when loading a save)
+   */
+  markItemsCollected(collectedItemIds: string[]): void {
+    for (const [, node] of this.nodes) {
+      if (node.item && collectedItemIds.includes(node.item.id)) {
+        node.item.collected = true;
+      }
+    }
   }
 
   /**

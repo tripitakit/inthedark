@@ -1,21 +1,31 @@
 import { Movement } from '../game/Movement';
+import { audioEngine } from '../audio/AudioEngine';
+import type { GameState } from '../game/GameState';
 import type { Interaction } from '../game/Interaction';
-import type { Minimap } from '../ui/Minimap';
 
 /**
  * InputHandler - Gestisce gli input da tastiera
  */
 export class InputHandler {
   private movement: Movement;
+  private gameState: GameState | null = null;
   private interaction: Interaction | null = null;
-  private minimap: Minimap | null = null;
   private onAction?: () => void;
+  private onSave?: () => void;
+  private onInventoryChange?: (itemId: string | null) => void;
   private enabled: boolean = false;
   private isMoving: boolean = false; // Previene input durante movimento
 
   constructor(movement: Movement, onAction?: () => void) {
     this.movement = movement;
     this.onAction = onAction;
+  }
+
+  /**
+   * Callback when save is triggered
+   */
+  setOnSave(callback: () => void): void {
+    this.onSave = callback;
   }
 
   /**
@@ -26,10 +36,17 @@ export class InputHandler {
   }
 
   /**
-   * Imposta l'istanza Minimap da usare
+   * Imposta l'istanza GameState da usare
    */
-  setMinimap(minimap: Minimap): void {
-    this.minimap = minimap;
+  setGameState(gameState: GameState): void {
+    this.gameState = gameState;
+  }
+
+  /**
+   * Callback quando cambia oggetto selezionato nell'inventario
+   */
+  setOnInventoryChange(callback: (itemId: string | null) => void): void {
+    this.onInventoryChange = callback;
   }
 
   /**
@@ -76,6 +93,12 @@ export class InputHandler {
         this.onAction?.();
         break;
 
+      case 'ArrowDown':
+        event.preventDefault();
+        this.movement.turnAround();
+        this.onAction?.();
+        break;
+
       case 'Enter':
         event.preventDefault();
         this.movement.activateSonar();
@@ -90,15 +113,40 @@ export class InputHandler {
         this.onAction?.();
         break;
 
-      case 'm':
-      case 'M':
+      case 'Control':
         event.preventDefault();
-        if (this.minimap) {
-          this.minimap.toggle();
-        }
+        this.cycleInventory();
+        break;
+
+      case 's':
+      case 'S':
+        event.preventDefault();
+        this.onSave?.();
         break;
     }
   };
+
+  /**
+   * Cicla tra gli oggetti dell'inventario (solo oggetti raccolti)
+   */
+  private cycleInventory(): void {
+    if (!this.gameState) return;
+
+    const item = this.gameState.selectNext();
+
+    if (item) {
+      // Feedback audio: firma sonora dell'oggetto selezionato
+      audioEngine.playItemSignature(item.soundSignature);
+      console.log(`Inventario: selezionato ${item.id}`);
+      this.onInventoryChange?.(item.id);
+    } else {
+      console.log('Inventario vuoto');
+      this.onInventoryChange?.(null);
+    }
+
+    // Aggiorna UI
+    this.onAction?.();
+  }
 
   /**
    * Gestisce il movimento in avanti (asincrono)
