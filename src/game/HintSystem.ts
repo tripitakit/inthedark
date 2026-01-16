@@ -204,15 +204,13 @@ const PUZZLE_HINTS: PuzzleHint[] = [
  * - Puzzle completion state
  *
  * Features:
- * - 30 second cooldown between hints
  * - Progressive hints (vague → clear)
+ * - Repeatable at any time (no cooldown)
  * - Lo-fi computer voice output
  */
 export class HintSystem {
   private gameState: GameState;
   private voiceSynth: VoiceSynthesizer;
-  private lastHintTime: number = 0;
-  private cooldownMs: number = 30000; // 30 seconds
 
   constructor(gameState: GameState, audioEngine: AudioEngine) {
     this.gameState = gameState;
@@ -221,16 +219,9 @@ export class HintSystem {
 
   /**
    * Request a hint for the current context
-   * Returns true if hint was provided, false if on cooldown or unavailable
+   * Returns true if hint was provided, false if currently speaking
    */
   async requestHint(): Promise<boolean> {
-    // Check cooldown
-    const now = Date.now();
-    if (now - this.lastHintTime < this.cooldownMs) {
-      console.log('HintSystem: Cooldown active');
-      return false;
-    }
-
     // Check if already speaking
     if (this.voiceSynth.speaking) {
       return false;
@@ -241,18 +232,16 @@ export class HintSystem {
     if (!hint) {
       // No specific hint - give general encouragement
       await this.voiceSynth.speak('Listen to your surroundings. The path reveals itself.');
-      this.lastHintTime = now;
       return true;
     }
 
-    // Get progressive hint level
+    // Get progressive hint level (first time vague, subsequent times clearer)
     const hintLevel = this.gameState.incrementHintLevel(hint.puzzleId);
     const hintIndex = Math.min(hintLevel - 1, hint.hints.length - 1);
     const hintText = hint.hints[hintIndex];
 
     console.log(`HintSystem: Providing hint ${hintLevel} for ${hint.puzzleId}`);
     await this.voiceSynth.speak(hintText);
-    this.lastHintTime = now;
 
     return true;
   }
@@ -298,23 +287,10 @@ export class HintSystem {
   }
 
   /**
-   * Check if hint system is ready (not on cooldown, not speaking)
+   * Check if hint system is ready (not currently speaking)
    */
   isReady(): boolean {
-    const now = Date.now();
-    return (
-      now - this.lastHintTime >= this.cooldownMs &&
-      !this.voiceSynth.speaking
-    );
-  }
-
-  /**
-   * Get remaining cooldown in seconds
-   */
-  getCooldownRemaining(): number {
-    const elapsed = Date.now() - this.lastHintTime;
-    const remaining = this.cooldownMs - elapsed;
-    return Math.max(0, Math.ceil(remaining / 1000));
+    return !this.voiceSynth.speaking;
   }
 
   /**
@@ -322,12 +298,5 @@ export class HintSystem {
    */
   setGameState(gameState: GameState): void {
     this.gameState = gameState;
-  }
-
-  /**
-   * Reset cooldown (for testing)
-   */
-  resetCooldown(): void {
-    this.lastHintTime = 0;
   }
 }
