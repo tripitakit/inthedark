@@ -20,30 +20,30 @@ const PUZZLE_HINTS: PuzzleHint[] = [
   // === FOREST / CAVE PUZZLES ===
   {
     puzzleId: 'chasm_rope',
-    roomContext: ['cave_chasm', 'cave_hall', 'cave_crossroads'],
-    lockId: 'chasm_lock',
+    roomContext: ['cave_chasm', 'cave_hall', 'cave_crossroads', 'cave_tunnel'],
+    lockId: 'chasm_rope',
     hints: [
       'The void hungers... but fibers may bridge the darkness.',
       'What binds, when woven, can span the abyss.',
-      'A rope. You need a rope to cross the chasm.',
+      'A rope. You need a rope to cross the chasm. Check the narrow tunnel.',
     ],
   },
   {
-    puzzleId: 'stream_gem',
-    roomContext: ['forest_stream', 'forest_clearing'],
-    lockId: 'stream_lock',
+    puzzleId: 'secret_gem',
+    roomContext: ['ship_corridor', 'cave_pool'],
+    lockId: 'secret_gem',
     hints: [
       'Crystal waters reflect crystalline keys.',
       'Something blue glimmers in the depths... or do you carry it?',
-      'The blue gem unlocks the path through the stream.',
+      'The blue gem unlocks the hologram room.',
     ],
   },
 
   // === SHIP PUZZLES ===
   {
     puzzleId: 'airlock_crystal',
-    roomContext: ['cave_entrance', 'ship_airlock', 'cave_deep'],
-    lockId: 'airlock_lock',
+    roomContext: ['ship_airlock', 'cave_deep'],
+    lockId: 'airlock_crystal',
     hints: [
       'Alien hearts beat in crystalline rhythm.',
       'The pulsing gem speaks the tongue of the stars.',
@@ -51,33 +51,33 @@ const PUZZLE_HINTS: PuzzleHint[] = [
     ],
   },
   {
-    puzzleId: 'engineering_cell',
-    roomContext: ['ship_engineering', 'ship_corridor', 'ship_bridge'],
-    lockId: 'engineering_lock',
+    puzzleId: 'engineering_power',
+    roomContext: ['ship_engineering', 'ship_bridge', 'ship_storage'],
+    lockId: 'engineering_power',
     hints: [
       'Machines hunger for stored lightning.',
       'Power flows from contained energy.',
-      'The power cell energizes the engineering bay.',
+      'The power cell energizes the engineering bay. Check the storage.',
     ],
   },
   {
     puzzleId: 'reactor_fuel',
-    roomContext: ['ship_reactor', 'ship_corridor', 'ship_engineering'],
-    lockId: 'reactor_lock',
+    roomContext: ['ship_reactor', 'ship_bridge', 'ship_quarters'],
+    lockId: 'reactor_fuel',
     hints: [
       'The heart of the ship thirsts for fire.',
       'Fuel feeds the flames of propulsion.',
-      'Insert the fuel cell into the reactor.',
+      'Insert the fuel cell into the reactor. Check the crew quarters.',
     ],
   },
   {
-    puzzleId: 'bridge_key',
-    roomContext: ['ship_bridge', 'ship_quarters', 'ship_corridor'],
-    lockId: 'bridge_lock',
+    puzzleId: 'bridge_activation',
+    roomContext: ['ship_bridge', 'ship_corridor', 'ship_engineering'],
+    lockId: 'bridge_activation',
     hints: [
       'Command requires authority, authority requires proof.',
       'A key shaped for stellar navigation.',
-      'The activation key unlocks the bridge controls.',
+      'The activation key unlocks the bridge controls. Check engineering.',
     ],
   },
 
@@ -89,27 +89,27 @@ const PUZZLE_HINTS: PuzzleHint[] = [
     hints: [
       'Sacred spaces answer to sacred sounds.',
       'Ring the call that summons the devoted.',
-      'The ritual bell opens the sanctuary.',
+      'The ritual bell opens the sanctuary. Check the side chapel.',
     ],
   },
   {
     puzzleId: 'crypt_seal',
-    roomContext: ['temple_main_hall', 'temple_library', 'temple_crypt_stairs'],
+    roomContext: ['temple_crypt', 'temple_crypt_stairs', 'temple_library'],
     lockId: 'crypt_seal',
     hints: [
       'Stone remembers... the tablets hold the key.',
       'Written wisdom unlocks the resting place.',
-      'Use the stone tablet to enter the crypt.',
+      'Use the stone tablet to enter the crypt. Check the library.',
     ],
   },
   {
-    puzzleId: 'inner_sanctum',
-    roomContext: ['temple_crypt', 'temple_sanctuary', 'temple_meditation'],
-    lockId: 'sanctum_seal',
+    puzzleId: 'inner_sanctum_seal',
+    roomContext: ['temple_inner_sanctum', 'temple_crypt', 'temple_meditation'],
+    lockId: 'inner_sanctum_seal',
     hints: [
       'The holy one wore their faith upon their chest.',
       'A medallion marks the path of the enlightened.',
-      'The monk medallion grants passage to the inner sanctum.',
+      'The monk medallion grants passage to the inner sanctum. Check the meditation room.',
     ],
   },
   {
@@ -123,34 +123,34 @@ const PUZZLE_HINTS: PuzzleHint[] = [
   },
   {
     puzzleId: 'portal_multi',
-    roomContext: ['temple_portal_room', 'temple_inner_sanctum'],
+    roomContext: ['temple_portal_room', 'temple_inner_sanctum', 'temple_offering_room', 'celestial_garden'],
     lockId: 'portal_activation',
     hints: [
       'Two become one: the vessel and the light it holds.',
       'Fill the chalice with celestial radiance.',
-      'Combine the offering chalice and crystal shard.',
+      'Combine the offering chalice and crystal shard. Chalice in offering room, shard in celestial garden.',
     ],
   },
 
   // === CELESTIAL PUZZLES ===
   {
     puzzleId: 'archive_seal',
-    roomContext: ['celestial_spire', 'celestial_fountain', 'celestial_archive'],
+    roomContext: ['celestial_spire', 'celestial_fountain'],
     lockId: 'archive_seal',
     hints: [
       'Harmony unlocks memory.',
       'The key that sings opens the songs of ages.',
-      'The harmonic key opens the celestial archive.',
+      'The harmonic key opens the celestial archive. Find it at the fountain.',
     ],
   },
   {
     puzzleId: 'oracle_seal',
-    roomContext: ['celestial_void_edge', 'celestial_bridge', 'celestial_oracle'],
+    roomContext: ['celestial_bridge', 'celestial_void_edge'],
     lockId: 'oracle_seal',
     hints: [
       'Emptiness holds wisdom.',
       'Capture nothing to learn everything.',
-      'The void essence reveals the oracle.',
+      'The void essence reveals the oracle. Find it at the void edge.',
     ],
   },
   {
@@ -160,12 +160,12 @@ const PUZZLE_HINTS: PuzzleHint[] = [
     hints: [
       'Echoes of the past resonate with the present.',
       'A fragment of memory completes the pattern.',
-      'Use the memory fragment at the resonance chamber.',
+      'Use the memory fragment at the resonance chamber. Find it in the memory hall.',
     ],
   },
   {
     puzzleId: 'harmonic_alignment',
-    roomContext: ['celestial_spire', 'celestial_bridge'],
+    roomContext: ['celestial_spire', 'celestial_fountain'],
     hints: [
       'The key dances with the cosmos: a full rotation of being.',
       'Hold the tone, face each direction in the suns path.',
@@ -174,12 +174,12 @@ const PUZZLE_HINTS: PuzzleHint[] = [
   },
   {
     puzzleId: 'transcendence',
-    roomContext: ['celestial_throne', 'celestial_transcendence', 'celestial_oracle', 'celestial_archive'],
+    roomContext: ['celestial_throne', 'celestial_oracle', 'celestial_archive'],
     lockId: 'transcendence_gate',
     hints: [
       'Two truths complete the journey: light and understanding.',
       'Stars heart and cosmic symbol together ascend.',
-      'Combine starlight core and cosmic sigil for transcendence.',
+      'Combine starlight core and cosmic sigil. Core in oracle, sigil in archive.',
     ],
   },
 
