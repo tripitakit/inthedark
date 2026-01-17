@@ -7,7 +7,7 @@
     {
       "id": "forest_start",
       "name": "Forest Trail",
-      "description": "You awaken on damp earth in total darkness. Your eyes strain but see nothing—not even shadows. A familiar weight rests in your hand: your portable terminal. Its dim screen glows faintly. The map display shows your position in a forest trail. The infrared sensor AI whispers its analysis of the surroundings—pine trees, moss, the scent of damp soil. Press ENTER to activate the SONAR pulse and detect exits and objects around you. Something feels wrong. You don't remember how you got here.",
+      "description": "You awaken on damp earth in total darkness. Your eyes strain but see nothing—not even shadows. A familiar weight rests in your hand: your portable terminal. Its dim screen glows faintly. The map display shows your position in a forest trail. AI sensors whisper theyr analyses of the surroundings. Pine trees, moss, the scent of damp soil. Something feels wrong. You don't remember how you got here.",
       "connections": {
         "north": "forest_path",
         "east": null,

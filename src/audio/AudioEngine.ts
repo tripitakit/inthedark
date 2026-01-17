@@ -507,8 +507,8 @@ export class AudioEngine {
 
     const now = this.context.currentTime;
     const notes = [800, 1000, 1200];
-    const noteDuration = 0.12;
-    const noteGap = 0.05;
+    const noteDuration = 0.18;
+    const noteGap = 0.08;
 
     for (let i = 0; i < notes.length; i++) {
       const startTime = now + i * (noteDuration + noteGap);
@@ -519,7 +519,7 @@ export class AudioEngine {
 
       const gain = this.context.createGain();
       gain.gain.setValueAtTime(0, startTime);
-      gain.gain.linearRampToValueAtTime(0.15, startTime + 0.02);
+      gain.gain.linearRampToValueAtTime(0.5, startTime + 0.03);
       gain.gain.exponentialRampToValueAtTime(0.01, startTime + noteDuration);
 
       osc.connect(gain);

@@ -144,16 +144,21 @@ async function initializeGame(state: GameState, saveData?: SaveData): Promise<vo
     }
     surpriseEventManager.onRoomEnter(newRoomId);
 
-    // Narrate the new room
+    // Narrate the new room (with delay to let item presence sound play first)
     const node = graphWorld.getNode(newRoomId);
     if (node?.description) {
       const roomName = node.name || newRoomId;
-      roomNarrator.narrateRoom(
-        newRoomId,
-        roomName,
-        gameState.orientation,
-        node.description
-      );
+      const orientation = gameState.orientation;
+      const description = node.description;
+      // Delay narration by 1s so item chime is heard first
+      setTimeout(() => {
+        roomNarrator.narrateRoom(
+          newRoomId,
+          roomName,
+          orientation,
+          description
+        );
+      }, 1000);
     }
   });
 

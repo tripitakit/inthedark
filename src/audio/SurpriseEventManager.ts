@@ -80,6 +80,7 @@ export class SurpriseEventManager {
       (e) => e.type === 'random' && e.rooms.includes(roomId)
     );
 
+    console.log(`SurpriseEventManager: Found ${randomEvents.length} random events for room ${roomId}`);
     for (const event of randomEvents) {
       this.scheduleRandomEvent(event);
     }
@@ -93,10 +94,15 @@ export class SurpriseEventManager {
     const maxInterval = (event.intervalMax || 60) * 1000;
     const delay = minInterval + Math.random() * (maxInterval - minInterval);
 
+    console.log(`SurpriseEventManager: Scheduling ${event.id} in ${(delay / 1000).toFixed(1)}s`);
+
     const timer = setTimeout(() => {
       // Check probability
       const probability = event.probability ?? 1;
-      if (Math.random() < probability) {
+      const roll = Math.random();
+      console.log(`SurpriseEventManager: ${event.id} timer fired - roll ${roll.toFixed(2)} vs prob ${probability}`);
+
+      if (roll < probability) {
         this.triggerEvent(event);
       }
 
