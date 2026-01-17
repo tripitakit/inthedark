@@ -2,13 +2,11 @@ import { AudioEngine } from './AudioEngine';
 import { GraphWorld } from '../game/GraphWorld';
 import { GameState } from '../game/GameState';
 import type { ItemSoundSignature } from '../types';
-
-// Timing della sequenza sonar (in millisecondi)
-const TIMING = {
-  ECHO_WALL_DELAY: 150,    // Eco breve = muro vicino (no passaggio)
-  ECHO_PASSAGE_DELAY: 450, // Eco lungo = spazio aperto (passaggio)
-  LOCK_SOUND_DELAY: 400,   // Delay dopo eco - gives time for echo to finish
-};
+import {
+  SONAR_ECHO_WALL_DELAY,
+  SONAR_ECHO_PASSAGE_DELAY,
+  SONAR_LOCK_SOUND_DELAY,
+} from '../constants';
 
 /**
  * Sonar - Orchestra la sequenza completa del sonar
@@ -77,7 +75,7 @@ export class Sonar {
     // 2. Eco di ritorno (solo frontale)
     // - Delay breve se c'è un muro (suono rimbalza subito)
     // - Delay lungo se c'è passaggio (suono viaggia lontano)
-    const echoDelay = hasPassageAhead ? TIMING.ECHO_PASSAGE_DELAY : TIMING.ECHO_WALL_DELAY;
+    const echoDelay = hasPassageAhead ? SONAR_ECHO_PASSAGE_DELAY : SONAR_ECHO_WALL_DELAY;
 
     setTimeout(() => {
       this.audioEngine.playEchoFiltered(hasPassageAhead);
@@ -87,7 +85,7 @@ export class Sonar {
     if (hasLockedDoor && lockSignature) {
       setTimeout(() => {
         this.audioEngine.playSignatureEcho(lockSignature!);
-      }, echoDelay + TIMING.LOCK_SOUND_DELAY);
+      }, echoDelay + SONAR_LOCK_SOUND_DELAY);
     }
 
     // Log per debug

@@ -1,4 +1,9 @@
 import type { AudioEngine } from './AudioEngine';
+import {
+  selectEnglishVoice,
+  areVoicesLoaded,
+  waitForVoices as waitForVoicesShared,
+} from './VoiceSelector';
 
 /**
  * VoiceSynthesizer - Text-to-speech using Web Speech API
@@ -12,101 +17,12 @@ export class VoiceSynthesizer {
   private rate: number = 0.95; // Slightly slower than normal
   private pitch: number = 0.7; // Lower pitch for mechanical tone
   private volume: number = 1.0;
-  private voice: SpeechSynthesisVoice | null = null;
-  private voicesLoaded: boolean = false;
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   constructor(_audioEngine: AudioEngine) {
     // AudioEngine kept for interface compatibility but not used
-    this.loadVoices();
-  }
-
-  /**
-   * Load and select an English voice
-   */
-  private loadVoices(): void {
-    if (!('speechSynthesis' in window)) {
-      return;
-    }
-
-    const selectEnglishVoice = () => {
-      const voices = speechSynthesis.getVoices();
-      if (voices.length === 0) return;
-
-      console.log(
-        'VoiceSynthesizer: Available voices:',
-        voices.map((v) => `${v.name} (${v.lang})`).join(', ')
-      );
-
-      // Priority order for English male/baritone voices
-      const preferredVoices = [
-        'Microsoft David', // Windows - male, deep voice
-        'Daniel', // macOS UK - male
-        'Alex', // macOS - male
-        'Google UK English Male',
-        'Microsoft Mark', // Windows - male
-        'Thomas', // macOS - male
-        'English (America)', // Linux espeak
-        'English (Great Britain)',
-      ];
-
-      // Try to find a preferred voice
-      for (const preferred of preferredVoices) {
-        const found = voices.find(
-          (v) =>
-            v.name.includes(preferred) ||
-            v.lang.startsWith(preferred) ||
-            v.lang === preferred
-        );
-        if (found) {
-          this.voice = found;
-          console.log(`VoiceSynthesizer: Selected voice: ${found.name} (${found.lang})`);
-          this.voicesLoaded = true;
-          return;
-        }
-      }
-
-      // Fallback: find any English male voice (avoid female voices)
-      const englishVoices = voices.filter(
-        (v) => v.lang.startsWith('en-') || v.lang.startsWith('en_')
-      );
-      // Prefer voices with "male" in name, or without "female" in name
-      const maleVoice = englishVoices.find(
-        (v) => v.name.toLowerCase().includes('male') && !v.name.toLowerCase().includes('female')
-      ) || englishVoices.find(
-        (v) => !v.name.toLowerCase().includes('female')
-      ) || englishVoices[0];
-
-      if (maleVoice) {
-        this.voice = maleVoice;
-        console.log(
-          `VoiceSynthesizer: Using fallback English voice: ${maleVoice.name} (${maleVoice.lang})`
-        );
-        this.voicesLoaded = true;
-        return;
-      }
-
-      // Last resort: use first available voice
-      if (voices.length > 0) {
-        this.voice = voices[0];
-        console.log(
-          `VoiceSynthesizer: No English voice found, using: ${voices[0].name} (${voices[0].lang})`
-        );
-        this.voicesLoaded = true;
-      }
-    };
-
-    // Try immediately (Chrome loads voices synchronously)
+    // Voice selection is handled by VoiceSelector
     selectEnglishVoice();
-
-    // Also listen for async voice loading (Firefox, Safari)
-    if (!this.voicesLoaded) {
-      speechSynthesis.onvoiceschanged = () => {
-        if (!this.voicesLoaded) {
-          selectEnglishVoice();
-        }
-      };
-    }
   }
 
   /**
@@ -134,9 +50,11 @@ export class VoiceSynthesizer {
     speechSynthesis.cancel();
 
     // Wait for voices if not loaded yet
-    if (!this.voicesLoaded) {
-      await this.waitForVoices();
+    if (!areVoicesLoaded()) {
+      await waitForVoicesShared();
     }
+
+    const voice = selectEnglishVoice();
 
     return new Promise((resolve) => {
       const utterance = new SpeechSynthesisUtterance(text);
@@ -146,14 +64,14 @@ export class VoiceSynthesizer {
       utterance.lang = 'en-US'; // Force English
 
       // Set voice if available
-      if (this.voice) {
-        utterance.voice = this.voice;
+      if (voice) {
+        utterance.voice = voice;
       }
 
       this.isSpeaking = true;
 
       console.log(
-        `VoiceSynthesizer: Speaking "${text.substring(0, 50)}..." (voice: ${this.voice?.name || 'default'}, pitch: ${this.pitch.toFixed(2)}, rate: ${this.rate})`
+        `VoiceSynthesizer: Speaking "${text.substring(0, 50)}..." (voice: ${voice?.name || 'default'}, pitch: ${this.pitch.toFixed(2)}, rate: ${this.rate})`
       );
 
       utterance.onend = () => {
@@ -169,39 +87,6 @@ export class VoiceSynthesizer {
       };
 
       speechSynthesis.speak(utterance);
-    });
-  }
-
-  /**
-   * Wait for voices to load (with timeout)
-   */
-  private waitForVoices(): Promise<void> {
-    return new Promise((resolve) => {
-      if (this.voicesLoaded) {
-        resolve();
-        return;
-      }
-
-      const checkVoices = () => {
-        const voices = speechSynthesis.getVoices();
-        if (voices.length > 0) {
-          this.loadVoices();
-          resolve();
-        }
-      };
-
-      // Check immediately
-      checkVoices();
-
-      // Set up listener
-      speechSynthesis.onvoiceschanged = () => {
-        checkVoices();
-      };
-
-      // Timeout after 1 second
-      setTimeout(() => {
-        resolve();
-      }, 1000);
     });
   }
 

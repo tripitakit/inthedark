@@ -20,10 +20,13 @@ export class InputHandler {
   private onNarrationToggle?: (enabled: boolean) => void;
   private enabled: boolean = false;
   private isMoving: boolean = false; // Previene input durante movimento
+  private boundHandleKeyDown: ((event: KeyboardEvent) => void) | null = null;
 
   constructor(movement: Movement, onAction?: () => void) {
     this.movement = movement;
     this.onAction = onAction;
+    // Bind the handler once to ensure we can remove it later
+    this.boundHandleKeyDown = this.handleKeyDown.bind(this);
   }
 
   /**
@@ -80,9 +83,10 @@ export class InputHandler {
    */
   enable(): void {
     if (this.enabled) return;
+    if (!this.boundHandleKeyDown) return;
 
     this.enabled = true;
-    document.addEventListener('keydown', this.handleKeyDown);
+    document.addEventListener('keydown', this.boundHandleKeyDown);
     console.log('InputHandler attivato');
   }
 
@@ -90,15 +94,36 @@ export class InputHandler {
    * Disattiva la gestione degli input
    */
   disable(): void {
+    if (!this.enabled) return;
+    if (!this.boundHandleKeyDown) return;
+
     this.enabled = false;
-    document.removeEventListener('keydown', this.handleKeyDown);
+    document.removeEventListener('keydown', this.boundHandleKeyDown);
     console.log('InputHandler disattivato');
+  }
+
+  /**
+   * Cleanup all event listeners and references
+   * Call this when the InputHandler is no longer needed
+   */
+  destroy(): void {
+    this.disable();
+    this.boundHandleKeyDown = null;
+    this.gameState = null;
+    this.interaction = null;
+    this.hintSystem = null;
+    this.roomNarrator = null;
+    this.onAction = undefined;
+    this.onSave = undefined;
+    this.onInventoryChange = undefined;
+    this.onNarrationToggle = undefined;
+    console.log('InputHandler destroyed');
   }
 
   /**
    * Handler per eventi keydown
    */
-  private handleKeyDown = (event: KeyboardEvent): void => {
+  private handleKeyDown(event: KeyboardEvent): void {
     if (!this.enabled) return;
 
     switch (event.key) {
@@ -162,7 +187,7 @@ export class InputHandler {
         this.toggleNarration();
         break;
     }
-  };
+  }
 
   /**
    * Request a hint from the hint system

@@ -15,6 +15,7 @@ import { RoomInfoUI } from './ui/RoomInfoUI';
 import alienAdventure from './data/levels/alien-adventure.json';
 import { SURPRISE_EVENTS } from './data/surpriseEvents';
 import type { LevelData, SaveData } from './types';
+import { NARRATION_DELAY, INITIAL_NARRATION_DELAY } from './constants';
 
 /**
  * In The Dark - Audio Game
@@ -150,7 +151,7 @@ async function initializeGame(state: GameState, saveData?: SaveData): Promise<vo
       const roomName = node.name || newRoomId;
       const orientation = gameState.orientation;
       const description = node.description;
-      // Delay narration by 1s so item chime is heard first
+      // Delay narration so item chime is heard first
       setTimeout(() => {
         roomNarrator.narrateRoom(
           newRoomId,
@@ -158,7 +159,7 @@ async function initializeGame(state: GameState, saveData?: SaveData): Promise<vo
           orientation,
           description
         );
-      }, 1000);
+      }, NARRATION_DELAY);
     }
   });
 
@@ -190,7 +191,7 @@ async function initializeGame(state: GameState, saveData?: SaveData): Promise<vo
         startDescription,
         true
       );
-    }, 500);
+    }, INITIAL_NARRATION_DELAY);
   }
 
   console.log('Game initialized!');
@@ -258,13 +259,17 @@ if (GameState.hasSavedGame()) {
 btnNewGame.addEventListener('click', (e) => {
   e.preventDefault();
   e.stopPropagation();
-  startNewGame();
+  startNewGame().catch((error) => {
+    console.error('Failed to start new game:', error);
+  });
 });
 
 btnLoadGame.addEventListener('click', (e) => {
   e.preventDefault();
   e.stopPropagation();
-  loadSavedGame();
+  loadSavedGame().catch((error) => {
+    console.error('Failed to load saved game:', error);
+  });
 });
 
 console.log('In The Dark - Select an option to start');
