@@ -123,7 +123,7 @@ export const SURPRISE_EVENTS: SurpriseEvent[] = [
   {
     id: 'temple_distant_voices',
     type: 'random',
-    rooms: ['temple_main_hall', 'temple_sanctuary', 'temple_inner_sanctum'],
+    rooms: ['temple_antechamber', 'temple_main_hall', 'temple_sanctuary', 'temple_inner_sanctum'],
     probability: 0.75,
     intervalMin: 12,
     intervalMax: 30,
