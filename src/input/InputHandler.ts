@@ -1,33 +1,12 @@
 import { Movement } from '../game/Movement';
 import { audioEngine } from '../audio/AudioEngine';
 import { speak } from '../audio/VoiceSelector';
+import { getSpokenName } from '../data/itemNames';
+import { INVENTORY_SPEECH_DELAY } from '../constants';
 import type { GameState } from '../game/GameState';
 import type { Interaction } from '../game/Interaction';
 import type { HintSystem } from '../game/HintSystem';
 import type { RoomNarrator } from '../audio/RoomNarrator';
-import type { GameMode } from '../types';
-
-// Display names for items (converts snake_case IDs to readable names)
-const ITEM_NAMES: Record<string, string> = {
-  lantern: 'lantern',
-  knife: 'knife',
-  blue_gem: 'blue gem',
-  rope: 'rope',
-  alien_crystal: 'alien crystal',
-  fuel_cell: 'fuel cell',
-  power_cell: 'power cell',
-  activation_key: 'activation key',
-  ritual_bell: 'ritual bell',
-  offering_chalice: 'offering chalice',
-  stone_tablet: 'stone tablet',
-  monk_medallion: 'monk medallion',
-  crystal_shard: 'crystal shard',
-  harmonic_key: 'harmonic key',
-  void_essence: 'void essence',
-  cosmic_sigil: 'cosmic sigil',
-  memory_fragment: 'memory fragment',
-  starlight_core: 'starlight core',
-};
 
 /**
  * InputHandler - Gestisce gli input da tastiera
@@ -45,7 +24,6 @@ export class InputHandler {
   private enabled: boolean = false;
   private isMoving: boolean = false; // Previene input durante movimento
   private boundHandleKeyDown: ((event: KeyboardEvent) => void) | null = null;
-  private gameMode: GameMode = 'easy';
 
   constructor(movement: Movement, onAction?: () => void) {
     this.movement = movement;
@@ -101,13 +79,6 @@ export class InputHandler {
    */
   setOnNarrationToggle(callback: (enabled: boolean) => void): void {
     this.onNarrationToggle = callback;
-  }
-
-  /**
-   * Set the game mode (easy/hard)
-   */
-  setGameMode(mode: GameMode): void {
-    this.gameMode = mode;
   }
 
   /**
@@ -236,7 +207,7 @@ export class InputHandler {
    * Speak controls help (only in HARD mode)
    */
   private speakControlsHelp(): void {
-    if (this.gameMode === 'hard') {
+    if (this.gameState?.gameMode === 'hard') {
       audioEngine.speakControls();
     }
   }
@@ -283,15 +254,15 @@ export class InputHandler {
 
     if (item) {
       // In HARD mode, speak item name first, then play signature
-      const itemName = ITEM_NAMES[item.id] || item.id.replace(/_/g, ' ');
+      const itemName = getSpokenName(item.id);
 
-      if (this.gameMode === 'hard') {
+      if (this.gameState?.gameMode === 'hard') {
         // Speak item name first
         speak(itemName);
         // Then play signature sound after a short delay
         setTimeout(() => {
           audioEngine.playItemSignature(item.soundSignature);
-        }, 600);
+        }, INVENTORY_SPEECH_DELAY);
       } else {
         // EASY mode: just play signature
         audioEngine.playItemSignature(item.soundSignature);

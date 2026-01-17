@@ -8,6 +8,8 @@ import {
   SONAR_ECHO_WALL_DELAY,
   SONAR_ECHO_PASSAGE_DELAY,
   SONAR_LOCK_SOUND_DELAY,
+  TUTORIAL_DELAY_BASE,
+  TUTORIAL_DELAY_AFTER_LOCK,
 } from '../constants';
 
 // Tutorial rooms where sonar sounds are explained
@@ -135,19 +137,16 @@ export class Sonar {
    * Speak tutorial explanation for sonar sounds (only once per type)
    */
   private speakTutorial(hasPassage: boolean, hasLock: boolean): void {
-    // Small delay to let the echo sound finish
-    const tutorialDelay = 600;
-
     if (hasPassage && !this.tutorialShownForPassage) {
       this.tutorialShownForPassage = true;
       setTimeout(() => {
         speak('That long echo means an open passage ahead. You can walk forward.');
-      }, tutorialDelay);
+      }, TUTORIAL_DELAY_BASE);
     } else if (!hasPassage && !hasLock && !this.tutorialShownForWall) {
       this.tutorialShownForWall = true;
       setTimeout(() => {
         speak('That short echo means a wall. No passage in this direction.');
-      }, tutorialDelay);
+      }, TUTORIAL_DELAY_BASE);
     } else if (hasLock && this.lockTutorialCount < 3) {
       this.lockTutorialCount++;
       const lockHints = [
@@ -158,7 +157,7 @@ export class Sonar {
       const hint = lockHints[this.lockTutorialCount - 1];
       setTimeout(() => {
         speak(hint);
-      }, tutorialDelay + 800); // Extra delay to let lock signature sound play first
+      }, TUTORIAL_DELAY_BASE + TUTORIAL_DELAY_AFTER_LOCK);
     }
   }
 

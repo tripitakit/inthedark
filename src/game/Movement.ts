@@ -1,5 +1,6 @@
 import { ROTATION_LEFT, ROTATION_RIGHT } from '../types';
 import type { Direction, SurfaceType } from '../types';
+import { TUTORIAL_DELAY_AFTER_ITEM } from '../constants';
 import { GameState } from './GameState';
 import { graphWorld } from './GraphWorld';
 import { audioEngine } from '../audio/AudioEngine';
@@ -9,14 +10,6 @@ import type { AmbienceManager } from '../audio/AmbienceManager';
 
 // Tutorial counter for item presence (module-level to persist across rooms)
 let itemPresenceTutorialCount = 0;
-
-// Label leggibili per le direzioni
-const DIRECTION_LABELS: Record<Direction, string> = {
-  north: 'Nord',
-  east: 'Est',
-  south: 'Sud',
-  west: 'Ovest',
-};
 
 /**
  * Movement - Gestisce movimento e rotazione del giocatore
@@ -120,7 +113,7 @@ export class Movement {
           const hint = itemHints[itemPresenceTutorialCount - 1];
           setTimeout(() => {
             speak(hint);
-          }, 800);
+          }, TUTORIAL_DELAY_AFTER_ITEM);
         }
       }
 
@@ -230,10 +223,4 @@ export class Movement {
     }
   }
 
-  /**
-   * Ottiene la direzione corrente come stringa leggibile
-   */
-  getOrientationLabel(): string {
-    return DIRECTION_LABELS[this.gameState.orientation];
-  }
 }

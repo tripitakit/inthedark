@@ -165,7 +165,6 @@ async function initializeGame(state: GameState, saveData?: SaveData): Promise<vo
   inputHandler.setOnNarrationToggle((enabled) => {
     voiceNarrationCheckbox.checked = enabled;
   });
-  inputHandler.setGameMode(gameMode);
   inputHandler.enable();
 
   // Set up room change listener for narration, surprise events, and item idle sounds

@@ -3,28 +3,8 @@ import { GameState } from './GameState';
 import { GraphWorld } from './GraphWorld';
 import { audioEngine } from '../audio/AudioEngine';
 import { speak } from '../audio/VoiceSelector';
-
-// Display names for items (converts snake_case IDs to readable names)
-const ITEM_NAMES: Record<string, string> = {
-  lantern: 'lantern',
-  knife: 'knife',
-  blue_gem: 'blue gem',
-  rope: 'rope',
-  alien_crystal: 'alien crystal',
-  fuel_cell: 'fuel cell',
-  power_cell: 'power cell',
-  activation_key: 'activation key',
-  ritual_bell: 'ritual bell',
-  offering_chalice: 'offering chalice',
-  stone_tablet: 'stone tablet',
-  monk_medallion: 'monk medallion',
-  crystal_shard: 'crystal shard',
-  harmonic_key: 'harmonic key',
-  void_essence: 'void essence',
-  cosmic_sigil: 'cosmic sigil',
-  memory_fragment: 'memory fragment',
-  starlight_core: 'starlight core',
-};
+import { getSpokenName } from '../data/itemNames';
+import { INTERACTION_NARRATION_DELAY } from '../constants';
 
 /**
  * Risultato di un'interazione
@@ -108,7 +88,7 @@ export class Interaction {
     }, 150); // Piccolo delay per separare i suoni
 
     // Voice narration after item signature sound
-    const itemName = ITEM_NAMES[item.id] || item.id.replace(/_/g, ' ');
+    const itemName = getSpokenName(item.id);
     setTimeout(() => {
       audioEngine.speakPickup(itemName);
     }, 600); // After signature sound finishes
@@ -154,10 +134,10 @@ export class Interaction {
     // Single-item lock: verify the object is correct
     if (lock.requiredItem !== selectedItem.id) {
       audioEngine.playError();
-      const itemName = ITEM_NAMES[selectedItem.id] || selectedItem.id.replace(/_/g, ' ');
+      const itemName = getSpokenName(selectedItem.id);
       setTimeout(() => {
         speak(`The ${itemName} doesn't work here.`);
-      }, 300);
+      }, INTERACTION_NARRATION_DELAY);
       return {
         type: 'error',
         message: 'Questo oggetto non funziona qui',
@@ -180,10 +160,10 @@ export class Interaction {
     }
 
     audioEngine.playUnlock();
-    const itemName = ITEM_NAMES[selectedItem.id] || selectedItem.id.replace(/_/g, ' ');
+    const itemName = getSpokenName(selectedItem.id);
     setTimeout(() => {
       speak(`The ${itemName} unlocked the passage. You can now walk forward.`);
-    }, 300);
+    }, INTERACTION_NARRATION_DELAY);
     console.log(`Sbloccato: ${lock.id} con ${selectedItem.id}`);
 
     return {
@@ -207,10 +187,10 @@ export class Interaction {
 
     if (!isValidItem) {
       audioEngine.playError();
-      const itemName = ITEM_NAMES[selectedItem.id] || selectedItem.id.replace(/_/g, ' ');
+      const itemName = getSpokenName(selectedItem.id);
       setTimeout(() => {
         speak(`The ${itemName} doesn't work here.`);
-      }, 300);
+      }, INTERACTION_NARRATION_DELAY);
       return {
         type: 'error',
         message: 'Questo oggetto non funziona qui',
@@ -223,7 +203,7 @@ export class Interaction {
       audioEngine.playItemPresence(); // Hint that something more is needed
       setTimeout(() => {
         speak('Something more is needed to open this passage.');
-      }, 300);
+      }, INTERACTION_NARRATION_DELAY);
       return {
         type: 'error',
         message: 'Serve qualcosa in più...',
@@ -251,11 +231,11 @@ export class Interaction {
     }
 
     audioEngine.playUnlock();
-    const item1Name = ITEM_NAMES[lock.requiredItem] || lock.requiredItem.replace(/_/g, ' ');
-    const item2Name = lock.requiredItem2 ? (ITEM_NAMES[lock.requiredItem2] || lock.requiredItem2.replace(/_/g, ' ')) : '';
+    const item1Name = getSpokenName(lock.requiredItem);
+    const item2Name = lock.requiredItem2 ? (getSpokenName(lock.requiredItem2)) : '';
     setTimeout(() => {
       speak(`The ${item1Name} and ${item2Name} combined to unlock the passage.`);
-    }, 300);
+    }, INTERACTION_NARRATION_DELAY);
     console.log(`Sbloccato: ${lock.id} con ${lock.requiredItem} + ${lock.requiredItem2}`);
 
     return {

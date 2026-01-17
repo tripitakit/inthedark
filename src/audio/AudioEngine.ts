@@ -243,7 +243,7 @@ export class AudioEngine {
     const voices = speechSynthesis.getVoices();
     const femaleVoice = this.selectFemaleVoice(voices);
 
-    // Queue all lines
+    // Queue all lines with error handling on each utterance
     controlLines.forEach((line, index) => {
       const utterance = new SpeechSynthesisUtterance(line);
       utterance.rate = 0.85; // Slower, like narrator
@@ -255,12 +255,14 @@ export class AudioEngine {
         utterance.voice = femaleVoice;
       }
 
-      // On last utterance, clear the protection flag
+      // Add error handler to ALL utterances to prevent flag getting stuck
+      utterance.onerror = () => {
+        this.speakingControls = false;
+      };
+
+      // On last utterance, also clear on successful end
       if (index === controlLines.length - 1) {
         utterance.onend = () => {
-          this.speakingControls = false;
-        };
-        utterance.onerror = () => {
           this.speakingControls = false;
         };
       }

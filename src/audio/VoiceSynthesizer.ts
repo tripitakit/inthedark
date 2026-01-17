@@ -146,5 +146,10 @@ export class VoiceSynthesizer {
   stop(): void {
     speechSynthesis.cancel();
     this.isSpeaking = false;
+    // Restore mixer levels when speech is stopped
+    const mixer = getMixer();
+    if (mixer) {
+      mixer.unduck(['ambience', 'effects']);
+    }
   }
 }

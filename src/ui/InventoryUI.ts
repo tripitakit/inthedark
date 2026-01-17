@@ -1,4 +1,5 @@
 import { GameState } from '../game/GameState';
+import { getDisplayName } from '../data/itemNames';
 import type { GameItem } from '../types';
 
 // Icons for each item type
@@ -26,23 +27,14 @@ const ITEM_ICONS: Record<string, string> = {
   cosmic_sigil: '✴️',
 };
 
-// English names for items
-const ITEM_NAMES: Record<string, string> = {
-  // Original items
-  lantern: 'Lantern',
-  knife: 'Knife',
-  rope: 'Rope',
-  blue_gem: 'Blue Gem',
+// Short names for compact UI display (longer names use getDisplayName)
+const SHORT_NAMES: Record<string, string> = {
   alien_crystal: 'Crystal',
-  power_cell: 'Power Cell',
-  fuel_cell: 'Fuel Cell',
   activation_key: 'Act. Key',
-  // Temple items
   ritual_bell: 'Bell',
   stone_tablet: 'Tablet',
   monk_medallion: 'Medallion',
   offering_chalice: 'Chalice',
-  // Celestial items
   crystal_shard: 'Shard',
   void_essence: 'Void',
   memory_fragment: 'Memory',
@@ -138,10 +130,10 @@ export class InventoryUI {
   }
 
   /**
-   * Gets the display name for an item
+   * Gets the display name for an item (short version for compact UI)
    */
   private formatItemName(id: string): string {
-    return ITEM_NAMES[id] || id.replace(/_/g, ' ');
+    return SHORT_NAMES[id] || getDisplayName(id);
   }
 
   /**

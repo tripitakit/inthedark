@@ -73,6 +73,21 @@ export const INITIAL_NARRATION_DELAY = 500;
 /** Hint system cooldown in milliseconds */
 export const HINT_COOLDOWN = 30000;
 
+/** Delay before tutorial narration starts (ms) */
+export const TUTORIAL_DELAY_BASE = 600;
+
+/** Extra delay for lock tutorial to let signature sound play first (ms) */
+export const TUTORIAL_DELAY_AFTER_LOCK = 800;
+
+/** Delay for item presence tutorial after chime (ms) */
+export const TUTORIAL_DELAY_AFTER_ITEM = 800;
+
+/** Delay for interaction result narration (ms) */
+export const INTERACTION_NARRATION_DELAY = 300;
+
+/** Delay for inventory item name speech before signature (ms) */
+export const INVENTORY_SPEECH_DELAY = 600;
+
 // ========================================
 // AUDIO FREQUENCIES (Hz)
 // ========================================
