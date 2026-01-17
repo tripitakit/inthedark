@@ -129,25 +129,31 @@ export class InputHandler {
     switch (event.key) {
       case 'ArrowUp':
         event.preventDefault();
-        this.handleMoveForward();
-        break;
-
-      case 'ArrowLeft':
-        event.preventDefault();
-        this.movement.rotateLeft();
-        this.onAction?.();
-        break;
-
-      case 'ArrowRight':
-        event.preventDefault();
-        this.movement.rotateRight();
+        this.movement.setOrientation('north');
         this.onAction?.();
         break;
 
       case 'ArrowDown':
         event.preventDefault();
-        this.movement.turnAround();
+        this.movement.setOrientation('south');
         this.onAction?.();
+        break;
+
+      case 'ArrowLeft':
+        event.preventDefault();
+        this.movement.setOrientation('west');
+        this.onAction?.();
+        break;
+
+      case 'ArrowRight':
+        event.preventDefault();
+        this.movement.setOrientation('east');
+        this.onAction?.();
+        break;
+
+      case 'Tab':
+        event.preventDefault();
+        this.handleMoveForward();
         break;
 
       case 'Enter':

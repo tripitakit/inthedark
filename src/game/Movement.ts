@@ -169,6 +169,26 @@ export class Movement {
   }
 
   /**
+   * Set orientation to a specific cardinal direction
+   */
+  setOrientation(direction: Direction): void {
+    const oldOrientation = this.gameState.orientation;
+    if (oldOrientation === direction) {
+      // Already facing this direction, just play compass tone
+      audioEngine.playCompassTone(direction);
+      return;
+    }
+
+    this.gameState.setOrientation(direction);
+    audioEngine.playCompassTone(direction);
+
+    // Update binaural audio listener orientation
+    this.updateBinauralOrientation(direction);
+
+    console.log(`Orientamento: ${oldOrientation} → ${direction}`);
+  }
+
+  /**
    * Update binaural audio listener orientation
    */
   private updateBinauralOrientation(direction: Direction): void {
