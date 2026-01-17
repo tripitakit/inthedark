@@ -163,7 +163,7 @@ async function initializeGame(state: GameState, saveData?: SaveData): Promise<vo
   });
 
   // Update UI and show game screen
-  startScreen.classList.add('hidden');
+  startScreen.classList.remove('active');
   gameScreen.classList.add('active');
   controlsHelpElement.classList.add('active');
   inventoryElement.classList.add('active');

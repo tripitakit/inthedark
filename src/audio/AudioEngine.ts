@@ -1959,32 +1959,86 @@ export class AudioEngine {
     if (!this.context || !this.masterGain) return;
     const now = this.context.currentTime;
 
-    // Multiple filtered noise layers
-    for (let i = 0; i < 3; i++) {
-      const bufferSize = this.context.sampleRate * 2;
-      const buffer = this.context.createBuffer(1, bufferSize, this.context.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let j = 0; j < bufferSize; j++) {
-        data[j] = (Math.random() * 2 - 1) * Math.sin(Math.PI * j / bufferSize);
-      }
+    // Duration for the chanting effect
+    const duration = 6;
 
-      const noise = this.context.createBufferSource();
-      noise.buffer = buffer;
+    // Base frequencies for a monastic choir (low male voices)
+    const voiceFreqs = [110, 115, 165, 170, 220]; // Mix of bass and tenor fundamentals
 
-      const filter = this.context.createBiquadFilter();
-      filter.type = 'bandpass';
-      filter.frequency.value = 300 + i * 200;
-      filter.Q.value = 5;
+    // Create multiple "voices" for choir effect
+    voiceFreqs.forEach((baseFreq, voiceIndex) => {
+      // Each voice has a fundamental + harmonics
+      const harmonics = [1, 2, 3, 4]; // Fundamental + 3 harmonics
 
-      const gain = this.context.createGain();
-      gain.gain.value = 0.08;
+      harmonics.forEach((harmonic, hIndex) => {
+        const osc = this.context!.createOscillator();
+        // Slightly detune each voice for organic feel
+        const detune = (Math.random() - 0.5) * 20;
+        osc.frequency.value = baseFreq * harmonic + detune;
+        osc.type = harmonic === 1 ? 'sawtooth' : 'triangle';
 
-      noise.connect(filter);
-      filter.connect(gain);
-      gain.connect(this.masterGain);
+        // Formant filter to create vowel sound ("ah" or "oh")
+        const formant = this.context!.createBiquadFilter();
+        formant.type = 'bandpass';
+        // Formant frequencies for "ah" vowel sound
+        const formantFreqs = [700, 1200, 2500];
+        formant.frequency.value = formantFreqs[hIndex % formantFreqs.length];
+        formant.Q.value = 8;
 
-      noise.start(now + i * 0.3);
-    }
+        // Gain node for amplitude
+        const gain = this.context!.createGain();
+        // Higher harmonics are quieter
+        const baseGain = 0.04 / (harmonic * harmonic);
+        gain.gain.setValueAtTime(0, now);
+
+        // Rising and falling chant pattern - different phase for each voice
+        const phaseOffset = voiceIndex * 0.4;
+        const riseTime = 1.5;
+        const holdTime = 2;
+        const fallTime = 2.5;
+
+        gain.gain.linearRampToValueAtTime(baseGain, now + phaseOffset + riseTime);
+        gain.gain.setValueAtTime(baseGain, now + phaseOffset + riseTime + holdTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + phaseOffset + riseTime + holdTime + fallTime);
+
+        osc.connect(formant);
+        formant.connect(gain);
+        gain.connect(this.masterGain!);
+
+        osc.start(now + phaseOffset);
+        osc.stop(now + duration + phaseOffset);
+      });
+    });
+
+    // Add subtle reverb-like effect with delayed, filtered copy
+    const reverbDelay = this.context.createDelay();
+    reverbDelay.delayTime.value = 0.3;
+
+    const reverbFilter = this.context.createBiquadFilter();
+    reverbFilter.type = 'lowpass';
+    reverbFilter.frequency.value = 800;
+
+    const reverbGain = this.context.createGain();
+    reverbGain.gain.value = 0.15;
+
+    // Create a single reverb "tail" voice
+    const reverbOsc = this.context.createOscillator();
+    reverbOsc.frequency.value = 130; // Low drone
+    reverbOsc.type = 'sine';
+
+    const reverbEnv = this.context.createGain();
+    reverbEnv.gain.setValueAtTime(0, now);
+    reverbEnv.gain.linearRampToValueAtTime(0.06, now + 2);
+    reverbEnv.gain.setValueAtTime(0.06, now + 4);
+    reverbEnv.gain.exponentialRampToValueAtTime(0.001, now + duration + 1);
+
+    reverbOsc.connect(reverbDelay);
+    reverbDelay.connect(reverbFilter);
+    reverbFilter.connect(reverbEnv);
+    reverbEnv.connect(this.masterGain);
+
+    reverbOsc.start(now);
+    reverbOsc.stop(now + duration + 1);
   }
 
   private playMachineAwaken(): void {

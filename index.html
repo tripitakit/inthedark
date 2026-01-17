@@ -21,9 +21,75 @@
       justify-content: center;
     }
 
+    /* Pre-splash screen */
+    #pre-splash {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3rem;
+    }
+
+    #pre-splash.hidden {
+      display: none;
+    }
+
+    #pre-splash h1 {
+      font-size: 3rem;
+      font-weight: bold;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      text-shadow: 0 0 20px rgba(0, 170, 255, 0.5);
+    }
+
+    #pre-splash .start-prompt {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    #pre-splash button {
+      background: #0af;
+      border: none;
+      color: #000;
+      padding: 16px 48px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    #pre-splash button:hover {
+      background: #fff;
+      transform: scale(1.05);
+    }
+
+    #pre-splash .press-key {
+      font-size: 0.9rem;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+
+    /* Start screen (main splash) */
     #start-screen {
       text-align: center;
-      cursor: pointer;
+      display: none;
+    }
+
+    #start-screen.active {
+      display: block;
     }
 
     #start-screen h1 {
@@ -159,9 +225,6 @@
       display: block;
     }
 
-    #start-screen.hidden {
-      display: none;
-    }
 
     /* Minimap */
     #minimap {
@@ -399,6 +462,16 @@
   </style>
 </head>
 <body>
+  <!-- Pre-splash: requires user interaction to enable audio -->
+  <div id="pre-splash">
+    <h1>In The Dark</h1>
+    <div class="start-prompt">
+      <button id="btn-enter">Enter</button>
+      <p class="press-key">or press any key</p>
+    </div>
+  </div>
+
+  <!-- Main splash screen (hidden until user interacts) -->
   <div id="start-screen">
     <h1>In The Dark</h1>
     <p>An audio adventure game</p>
@@ -489,20 +562,56 @@
   <div id="inventory"></div>
 
   <script>
-    // Speak How to Play on page load (matching game narrator voice)
-    let hasSpoken = false;
+    // Pre-splash to main splash transition with audio unlock
+    const preSplash = document.getElementById('pre-splash');
+    const startScreen = document.getElementById('start-screen');
+    const btnEnter = document.getElementById('btn-enter');
+    let hasEnteredSplash = false;
 
+    // Transition from pre-splash to main splash
+    function enterMainSplash() {
+      if (hasEnteredSplash) return;
+      hasEnteredSplash = true;
+
+      console.log('Entering main splash screen');
+
+      // Hide pre-splash, show main splash
+      preSplash.classList.add('hidden');
+      startScreen.classList.add('active');
+
+      // Now that we have user interaction, speak the How to Play
+      // Small delay to ensure the transition is visible
+      setTimeout(speakHowToPlay, 300);
+    }
+
+    // Button click
+    btnEnter.addEventListener('click', enterMainSplash);
+
+    // Any key press
+    document.addEventListener('keydown', function onKeyDown(e) {
+      if (!hasEnteredSplash) {
+        enterMainSplash();
+      }
+    });
+
+    // Speak How to Play narration
     function speakHowToPlay() {
-      if (hasSpoken) return;
-
       const voices = speechSynthesis.getVoices();
+
+      // If voices not loaded yet, wait for them
       if (voices.length === 0) {
-        console.log('HowToPlay: No voices available yet');
-        return false;
+        console.log('HowToPlay: Waiting for voices to load...');
+        speechSynthesis.onvoiceschanged = () => {
+          speechSynthesis.onvoiceschanged = null;
+          speakHowToPlay();
+        };
+        return;
       }
 
-      hasSpoken = true;
       console.log('HowToPlay: Speaking with', voices.length, 'voices available');
+
+      // Cancel any stuck utterances
+      speechSynthesis.cancel();
 
       const howToPlayText = `
         Welcome to In The Dark, an audio adventure game.
@@ -561,44 +670,12 @@
         console.log('HowToPlay: Using voice:', selectedVoice.name);
       }
 
+      utterance.onstart = () => console.log('HowToPlay: Speech started');
+      utterance.onend = () => console.log('HowToPlay: Speech completed');
+      utterance.onerror = (e) => console.log('HowToPlay: Speech error:', e.error);
+
       speechSynthesis.speak(utterance);
-      return true;
     }
-
-    // Try multiple methods to ensure voices load
-    function trySpeak() {
-      // Method 1: Try immediately
-      if (!speakHowToPlay()) {
-        // Method 2: Listen for voiceschanged event
-        speechSynthesis.onvoiceschanged = () => {
-          if (speakHowToPlay()) {
-            speechSynthesis.onvoiceschanged = null;
-          }
-        };
-
-        // Method 3: Polling fallback (some browsers need this)
-        let attempts = 0;
-        const pollVoices = setInterval(() => {
-          attempts++;
-          if (speakHowToPlay() || attempts > 20) {
-            clearInterval(pollVoices);
-          }
-        }, 100);
-      }
-    }
-
-    // Try on page load
-    trySpeak();
-
-    // Method 4: Browsers may block auto-play audio until user interaction
-    // Add click listener as fallback
-    document.addEventListener('click', function onFirstClick() {
-      if (!hasSpoken) {
-        console.log('HowToPlay: Triggered by user interaction');
-        trySpeak();
-      }
-      document.removeEventListener('click', onFirstClick);
-    }, { once: true });
   </script>
   <script type="module" src="/src/main.ts"></script>
 </body>
