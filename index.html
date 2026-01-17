@@ -490,9 +490,22 @@
 
   <script>
     // Speak How to Play on page load (matching game narrator voice)
+    let hasSpoken = false;
+
     function speakHowToPlay() {
+      if (hasSpoken) return;
+
+      const voices = speechSynthesis.getVoices();
+      if (voices.length === 0) {
+        console.log('HowToPlay: No voices available yet');
+        return false;
+      }
+
+      hasSpoken = true;
+      console.log('HowToPlay: Speaking with', voices.length, 'voices available');
+
       const howToPlayText = `
-        Welcome to In The Dark, an audio adventure game,
+        Welcome to In The Dark, an audio adventure game.
         You are lost in total darkness. Navigate using Arrow Keys to move and turn.
         Press Enter to activate your sonar and detect exits, items, and obstacles around you.
         Collect items with Space and use them to unlock passages.
@@ -507,7 +520,6 @@
       utterance.lang = 'en-US';
 
       // Select voice with same priority as game narrator
-      const voices = speechSynthesis.getVoices();
       const preferredVoices = [
         'Microsoft David',
         'Daniel',
@@ -546,19 +558,31 @@
 
       if (selectedVoice) {
         utterance.voice = selectedVoice;
+        console.log('HowToPlay: Using voice:', selectedVoice.name);
       }
 
       speechSynthesis.speak(utterance);
+      return true;
     }
 
-    // Wait for voices to load (needed for Chrome)
-    if (speechSynthesis.getVoices().length > 0) {
-      speakHowToPlay();
-    } else {
+    // Try multiple methods to ensure voices load
+    // Method 1: Try immediately
+    if (!speakHowToPlay()) {
+      // Method 2: Listen for voiceschanged event
       speechSynthesis.onvoiceschanged = () => {
-        speakHowToPlay();
-        speechSynthesis.onvoiceschanged = null;
+        if (speakHowToPlay()) {
+          speechSynthesis.onvoiceschanged = null;
+        }
       };
+
+      // Method 3: Polling fallback (some browsers need this)
+      let attempts = 0;
+      const pollVoices = setInterval(() => {
+        attempts++;
+        if (speakHowToPlay() || attempts > 20) {
+          clearInterval(pollVoices);
+        }
+      }, 100);
     }
   </script>
   <script type="module" src="/src/main.ts"></script>
