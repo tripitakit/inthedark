@@ -508,7 +508,7 @@ class RustlingLeaves extends BaseAmbientGenerator {
   private noiseBuffer: AudioBuffer | null = null;
 
   constructor(context: AudioContext) {
-    super(context, 0.12);
+    super(context, 0.25);
     this.noiseBuffer = createPinkNoiseBuffer(context, 10);
   }
 
@@ -584,7 +584,7 @@ class Crickets extends BaseAmbientGenerator {
   private tremolo: OscillatorNode | null = null;
 
   constructor(context: AudioContext) {
-    super(context, 0.1);
+    super(context, 0.22);
   }
 
   start(): void {
@@ -736,7 +736,7 @@ class CaveEcho extends BaseAmbientGenerator {
   private nextEchoTimeout: number | null = null;
 
   constructor(context: AudioContext) {
-    super(context, 0.08);
+    super(context, 0.22);
   }
 
   start(): void {
@@ -1008,7 +1008,7 @@ class AlienPulse extends BaseAmbientGenerator {
   private lfo: OscillatorNode | null = null;
 
   constructor(context: AudioContext) {
-    super(context, 0.12);
+    super(context, 0.25);
   }
 
   start(): void {
@@ -1077,7 +1077,7 @@ class AirlockSeal extends BaseAmbientGenerator {
   private nextSealTimeout: number | null = null;
 
   constructor(context: AudioContext) {
-    super(context, 0.1);
+    super(context, 0.22);
   }
 
   start(): void {
@@ -1158,7 +1158,7 @@ class PipesCreak extends BaseAmbientGenerator {
   private nextCreakTimeout: number | null = null;
 
   constructor(context: AudioContext) {
-    super(context, 0.08);
+    super(context, 0.2);
   }
 
   start(): void {
@@ -1224,7 +1224,7 @@ class DormantConsole extends BaseAmbientGenerator {
   private nextBeepTimeout: number | null = null;
 
   constructor(context: AudioContext) {
-    super(context, 0.06);
+    super(context, 0.18);
   }
 
   start(): void {
@@ -1276,7 +1276,7 @@ class ComputerBeep extends BaseAmbientGenerator {
   private nextBeepTimeout: number | null = null;
 
   constructor(context: AudioContext) {
-    super(context, 0.08);
+    super(context, 0.2);
   }
 
   start(): void {
@@ -1403,7 +1403,7 @@ class Hydraulics extends BaseAmbientGenerator {
   private nextWhooshTimeout: number | null = null;
 
   constructor(context: AudioContext) {
-    super(context, 0.12);
+    super(context, 0.25);
   }
 
   start(): void {
@@ -1543,7 +1543,7 @@ class EnergyPulse extends BaseAmbientGenerator {
   private lfo: OscillatorNode | null = null;
 
   constructor(context: AudioContext) {
-    super(context, 0.1);
+    super(context, 0.22);
   }
 
   start(): void {
@@ -1604,7 +1604,7 @@ class ShipAmbient extends BaseAmbientGenerator {
   private noiseBuffer: AudioBuffer | null = null;
 
   constructor(context: AudioContext) {
-    super(context, 0.12);
+    super(context, 0.25);
     this.noiseBuffer = createPinkNoiseBuffer(context, 10);
   }
 
@@ -1672,7 +1672,7 @@ class MetalCreak extends BaseAmbientGenerator {
   private nextCreakTimeout: number | null = null;
 
   constructor(context: AudioContext) {
-    super(context, 0.08);
+    super(context, 0.2);
   }
 
   start(): void {
@@ -1732,7 +1732,7 @@ class StaticBurst extends BaseAmbientGenerator {
   private nextBurstTimeout: number | null = null;
 
   constructor(context: AudioContext) {
-    super(context, 0.06);
+    super(context, 0.18);
   }
 
   start(): void {
@@ -1863,7 +1863,7 @@ class EtherealMusic extends BaseAmbientGenerator {
   private lfo: OscillatorNode | null = null;
 
   constructor(context: AudioContext) {
-    super(context, 0.1);
+    super(context, 0.22);
   }
 
   start(): void {
@@ -1935,7 +1935,7 @@ class StoneEcho extends BaseAmbientGenerator {
   private nextEchoTimeout: number | null = null;
 
   constructor(context: AudioContext) {
-    super(context, 0.1);
+    super(context, 0.25);
   }
 
   start(): void {
@@ -2002,7 +2002,7 @@ class ChantingWhisper extends BaseAmbientGenerator {
   private nextChantTimeout: number | null = null;
 
   constructor(context: AudioContext) {
-    super(context, 0.08);
+    super(context, 0.2);
   }
 
   start(): void {
@@ -2151,7 +2151,7 @@ class RitualBells extends BaseAmbientGenerator {
   private nextBellTimeout: number | null = null;
 
   constructor(context: AudioContext) {
-    super(context, 0.12);
+    super(context, 0.25);
   }
 
   start(): void {
@@ -2375,7 +2375,7 @@ class CrystalHarmonic extends BaseAmbientGenerator {
   private oscillators: OscillatorNode[] = [];
 
   constructor(context: AudioContext) {
-    super(context, 0.08);
+    super(context, 0.22);
   }
 
   start(): void {
@@ -2427,7 +2427,7 @@ class VoidWhisper extends BaseAmbientGenerator {
   private nextWhisperTimeout: number | null = null;
 
   constructor(context: AudioContext) {
-    super(context, 0.05);
+    super(context, 0.18);
   }
 
   start(): void {
@@ -2501,7 +2501,7 @@ class EnergyStream extends BaseAmbientGenerator {
   private noiseBuffer: AudioBuffer | null = null;
 
   constructor(context: AudioContext) {
-    super(context, 0.12);
+    super(context, 0.25);
     this.noiseBuffer = createPinkNoiseBuffer(context, 10);
   }
 
@@ -2636,7 +2636,7 @@ class HarmonicResonance extends BaseAmbientGenerator {
   private lfo: OscillatorNode | null = null;
 
   constructor(context: AudioContext) {
-    super(context, 0.1);
+    super(context, 0.22);
   }
 
   start(): void {
@@ -2704,7 +2704,7 @@ class EtherealShimmer extends BaseAmbientGenerator {
   private nextShimmerTimeout: number | null = null;
 
   constructor(context: AudioContext) {
-    super(context, 0.06);
+    super(context, 0.18);
   }
 
   start(): void {
