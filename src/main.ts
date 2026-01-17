@@ -96,6 +96,8 @@ async function initializeGame(state: GameState, saveData?: SaveData): Promise<vo
   if (context && hrtfEnabled) {
     binauralAudio = new BinauralAudio(context);
     binauralAudio.updateListenerOrientation(gameState.orientation);
+    // Connect binaural audio to audioEngine for HRTF spatial sounds
+    audioEngine.setBinauralAudio(binauralAudio);
     console.log('BinauralAudio (HRTF) initialized');
   }
 

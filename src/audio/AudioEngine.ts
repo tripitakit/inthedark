@@ -5,6 +5,7 @@ import { GameFeedback } from './GameFeedback';
 import { VictorySequence } from './VictorySequence';
 import { SurpriseEffects } from './SurpriseEffects';
 import { createMixer, AudioMixer } from './AudioMixer';
+import { BinauralAudio } from './BinauralAudio';
 import { MASTER_VOLUME } from '../constants';
 
 // Spoken direction names for compass
@@ -51,6 +52,14 @@ export class AudioEngine {
    */
   getMixer(): AudioMixer | null {
     return this.mixer;
+  }
+
+  /**
+   * Set binaural audio processor for HRTF spatial audio
+   * When set, spatial sounds will use HRTF instead of stereo panning
+   */
+  setBinauralAudio(binaural: BinauralAudio | null): void {
+    this.itemSounds?.setBinauralAudio(binaural);
   }
 
   /**

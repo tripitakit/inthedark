@@ -5,15 +5,24 @@
  */
 
 import type { ItemSoundSignature } from '../types';
+import type { BinauralAudio } from './BinauralAudio';
 
 export class ItemSounds {
   private context: AudioContext;
   private masterGain: GainNode;
   private activeIdleLoops: Map<ItemSoundSignature, ReturnType<typeof setInterval>> = new Map();
+  private binauralAudio: BinauralAudio | null = null;
 
   constructor(context: AudioContext, masterGain: GainNode) {
     this.context = context;
     this.masterGain = masterGain;
+  }
+
+  /**
+   * Set binaural audio processor for HRTF spatial audio
+   */
+  setBinauralAudio(binaural: BinauralAudio | null): void {
+    this.binauralAudio = binaural;
   }
 
   /**
@@ -690,20 +699,40 @@ export class ItemSounds {
     const baseGain = 0.05; // Very quiet
     const distanceGain = Math.max(0.01, baseGain / (1 + distance * 0.3));
 
-    // Create panner for spatial positioning
-    const panner = this.context.createStereoPanner();
-    panner.pan.value = pan;
+    // Create spatial panner - use HRTF if available, otherwise stereo panning
+    let spatialNode: AudioNode;
+    if (this.binauralAudio) {
+      // Use HRTF for true 3D audio positioning
+      const hrtfPanner = this.binauralAudio.createSpatialSource({
+        refDistance: 1,
+        maxDistance: 10,
+        rolloffFactor: 1,
+      });
+      // Convert pan (-1 to +1) and distance to 3D position
+      // x = left/right, z = front/back (negative z is front)
+      this.binauralAudio.setSourcePosition(hrtfPanner, {
+        x: pan,         // Left/right based on pan
+        y: 0,           // Same height
+        z: -distance,   // Distance in front
+      });
+      spatialNode = hrtfPanner;
+    } else {
+      // Fallback to stereo panning
+      const panner = this.context.createStereoPanner();
+      panner.pan.value = pan;
+      spatialNode = panner;
+    }
 
     // Create quiet gain node
     const idleGain = this.context.createGain();
     idleGain.gain.value = distanceGain;
 
-    panner.connect(idleGain);
+    spatialNode.connect(idleGain);
     idleGain.connect(this.masterGain);
 
     // Play idle sound function
     const playIdleSound = () => {
-      this.playQuietSignature(signature, panner);
+      this.playQuietSignature(signature, spatialNode);
     };
 
     // Initial play
