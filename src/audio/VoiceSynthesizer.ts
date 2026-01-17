@@ -4,6 +4,7 @@ import {
   areVoicesLoaded,
   waitForVoices as waitForVoicesShared,
 } from './VoiceSelector';
+import { getMixer } from './AudioMixer';
 
 /**
  * VoiceSynthesizer - Text-to-speech using Web Speech API
@@ -70,6 +71,12 @@ export class VoiceSynthesizer {
 
       this.isSpeaking = true;
 
+      // Duck background audio when speech starts
+      const mixer = getMixer();
+      if (mixer) {
+        mixer.duck(['ambience', 'effects']);
+      }
+
       console.log(
         `VoiceSynthesizer: Speaking "${text.substring(0, 50)}..." (voice: ${voice?.name || 'default'}, pitch: ${this.pitch.toFixed(2)}, rate: ${this.rate})`
       );
@@ -77,12 +84,20 @@ export class VoiceSynthesizer {
       utterance.onend = () => {
         console.log('VoiceSynthesizer: Speech complete');
         this.isSpeaking = false;
+        // Restore background audio when speech ends
+        if (mixer) {
+          mixer.unduck(['ambience', 'effects']);
+        }
         resolve();
       };
 
       utterance.onerror = (event) => {
         console.log('VoiceSynthesizer: Speech error', event.error);
         this.isSpeaking = false;
+        // Restore background audio on error too
+        if (mixer) {
+          mixer.unduck(['ambience', 'effects']);
+        }
         resolve();
       };
 

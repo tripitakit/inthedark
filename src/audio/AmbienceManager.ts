@@ -7,6 +7,44 @@ import { createAmbientGenerator, type AmbientGenerator } from './AmbientSounds';
 const DEFAULT_TRANSITION_DURATION = 1.5;
 
 /**
+ * Room EQ configuration
+ */
+interface RoomEQ {
+  lowShelf: { frequency: number; gain: number };
+  highShelf: { frequency: number; gain: number };
+}
+
+/**
+ * Predefined EQ profiles for different environment types
+ */
+const ROOM_EQ_PRESETS: Record<string, RoomEQ> = {
+  cave: {
+    lowShelf: { frequency: 200, gain: 4 },
+    highShelf: { frequency: 4000, gain: -3 },
+  },
+  spaceship: {
+    lowShelf: { frequency: 80, gain: 2 },
+    highShelf: { frequency: 6000, gain: 1 },
+  },
+  forest: {
+    lowShelf: { frequency: 150, gain: -2 },
+    highShelf: { frequency: 3000, gain: 3 },
+  },
+  temple: {
+    lowShelf: { frequency: 120, gain: 3 },
+    highShelf: { frequency: 5000, gain: -2 },
+  },
+  celestial: {
+    lowShelf: { frequency: 100, gain: 1 },
+    highShelf: { frequency: 8000, gain: 4 },
+  },
+  default: {
+    lowShelf: { frequency: 150, gain: 0 },
+    highShelf: { frequency: 6000, gain: 0 },
+  },
+};
+
+/**
  * AmbienceManager - Orchestrazione dell'ambiente sonoro
  *
  * Gestisce:
@@ -17,9 +55,12 @@ const DEFAULT_TRANSITION_DURATION = 1.5;
 export class AmbienceManager {
   private audioEngine: AudioEngine;
   private reverb: Reverb | null = null;
+  private lowShelfFilter: BiquadFilterNode | null = null;
+  private highShelfFilter: BiquadFilterNode | null = null;
   private activeGenerators: Map<string, AmbientGenerator> = new Map();
   private pendingStops: Map<string, number> = new Map(); // Timeout IDs for cleanup
   private currentConfig: AmbienceConfig | null = null;
+  private currentEQType: string = 'default';
 
   constructor(audioEngine: AudioEngine) {
     this.audioEngine = audioEngine;
@@ -38,11 +79,26 @@ export class AmbienceManager {
       return;
     }
 
-    // Create reverb and connect to master
-    this.reverb = new Reverb(context);
-    this.reverb.getOutput().connect(masterGain);
+    // Create EQ filters
+    this.lowShelfFilter = context.createBiquadFilter();
+    this.lowShelfFilter.type = 'lowshelf';
+    this.lowShelfFilter.frequency.value = 150;
+    this.lowShelfFilter.gain.value = 0;
 
-    console.log('AmbienceManager initialized');
+    this.highShelfFilter = context.createBiquadFilter();
+    this.highShelfFilter.type = 'highshelf';
+    this.highShelfFilter.frequency.value = 6000;
+    this.highShelfFilter.gain.value = 0;
+
+    // Create reverb
+    this.reverb = new Reverb(context);
+
+    // Chain: reverb output → lowShelf → highShelf → master
+    this.reverb.getOutput().connect(this.lowShelfFilter);
+    this.lowShelfFilter.connect(this.highShelfFilter);
+    this.highShelfFilter.connect(masterGain);
+
+    console.log('AmbienceManager initialized with room EQ');
   }
 
   /**
@@ -50,6 +106,40 @@ export class AmbienceManager {
    */
   getReverbInput(): GainNode | null {
     return this.reverb?.getInput() ?? null;
+  }
+
+  /**
+   * Set room EQ based on environment type
+   */
+  setRoomEQ(envType: string, transitionTime: number = 0.5): void {
+    if (!this.lowShelfFilter || !this.highShelfFilter) return;
+
+    const preset = ROOM_EQ_PRESETS[envType] ?? ROOM_EQ_PRESETS.default;
+    const context = this.audioEngine.getContext();
+    if (!context) return;
+
+    const now = context.currentTime;
+
+    // Transition low shelf
+    this.lowShelfFilter.frequency.setValueAtTime(this.lowShelfFilter.frequency.value, now);
+    this.lowShelfFilter.frequency.linearRampToValueAtTime(preset.lowShelf.frequency, now + transitionTime);
+    this.lowShelfFilter.gain.setValueAtTime(this.lowShelfFilter.gain.value, now);
+    this.lowShelfFilter.gain.linearRampToValueAtTime(preset.lowShelf.gain, now + transitionTime);
+
+    // Transition high shelf
+    this.highShelfFilter.frequency.setValueAtTime(this.highShelfFilter.frequency.value, now);
+    this.highShelfFilter.frequency.linearRampToValueAtTime(preset.highShelf.frequency, now + transitionTime);
+    this.highShelfFilter.gain.setValueAtTime(this.highShelfFilter.gain.value, now);
+    this.highShelfFilter.gain.linearRampToValueAtTime(preset.highShelf.gain, now + transitionTime);
+
+    this.currentEQType = envType;
+  }
+
+  /**
+   * Get current EQ type
+   */
+  getCurrentEQType(): string {
+    return this.currentEQType;
   }
 
   /**
@@ -68,6 +158,9 @@ export class AmbienceManager {
     this.reverb.setDecay(config.reverbDecay);
     this.reverb.setWetDry(config.reverbWet);
     this.reverb.setCharacter(config.reverbCharacter);
+
+    // Set room EQ based on environment type
+    this.setRoomEQ(config.type, 0.1);
 
     // Start new generators
     this.startGenerators(config.sounds);
@@ -94,6 +187,11 @@ export class AmbienceManager {
     // Change character (instant, but reverb tail handles smoothing)
     if (this.currentConfig?.reverbCharacter !== config.reverbCharacter) {
       this.reverb.setCharacter(config.reverbCharacter);
+    }
+
+    // Transition room EQ
+    if (this.currentEQType !== config.type) {
+      this.setRoomEQ(config.type, duration);
     }
 
     // Cross-fade generators

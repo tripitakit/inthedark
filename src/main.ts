@@ -3,6 +3,7 @@ import { Sonar } from './audio/Sonar';
 import { AmbienceManager } from './audio/AmbienceManager';
 import { RoomNarrator } from './audio/RoomNarrator';
 import { SurpriseEventManager } from './audio/SurpriseEventManager';
+import { BinauralAudio } from './audio/BinauralAudio';
 import { GameState } from './game/GameState';
 import { graphWorld } from './game/GraphWorld';
 import { Movement } from './game/Movement';
@@ -40,6 +41,7 @@ const roomInfoElement = getRequiredElement('room-info');
 const btnNewGame = getRequiredElement('btn-new-game') as HTMLButtonElement;
 const btnLoadGame = getRequiredElement('btn-load-game') as HTMLButtonElement;
 const voiceNarrationCheckbox = getRequiredElement('voice-narration') as HTMLInputElement;
+const binauralAudioCheckbox = getRequiredElement('binaural-audio') as HTMLInputElement;
 
 // Global state
 let gameState: GameState;
@@ -50,6 +52,7 @@ let inventoryUI: InventoryUI;
 let roomInfoUI: RoomInfoUI;
 let roomNarrator: RoomNarrator;
 let surpriseEventManager: SurpriseEventManager;
+let binauralAudio: BinauralAudio | null = null;
 
 /**
  * Updates all UI components
@@ -87,8 +90,20 @@ async function initializeGame(state: GameState, saveData?: SaveData): Promise<vo
   // Initialize movement system
   movement = new Movement(gameState);
 
+  // Initialize binaural/HRTF audio if enabled
+  const hrtfEnabled = binauralAudioCheckbox.checked;
+  const context = audioEngine.getContext();
+  if (context && hrtfEnabled) {
+    binauralAudio = new BinauralAudio(context);
+    binauralAudio.updateListenerOrientation(gameState.orientation);
+    console.log('BinauralAudio (HRTF) initialized');
+  }
+
   // Initialize sonar system
   const sonar = new Sonar(audioEngine, graphWorld, gameState);
+  if (binauralAudio) {
+    sonar.setBinauralAudio(binauralAudio);
+  }
   movement.setSonar(sonar);
 
   // Initialize ambience system
@@ -137,8 +152,22 @@ async function initializeGame(state: GameState, saveData?: SaveData): Promise<vo
   });
   inputHandler.enable();
 
-  // Set up room change listener for narration and surprise events
+  // Set up room change listener for narration, surprise events, and item idle sounds
   gameState.onRoomChange((newRoomId, oldRoomId) => {
+    // Stop all item idle loops from previous room
+    if (oldRoomId) {
+      audioEngine.stopAllItemIdleLoops();
+    }
+
+    // Start item idle loop for new room if it has an uncollected item
+    const newNode = graphWorld.getNode(newRoomId);
+    if (newNode?.item && !newNode.item.collected) {
+      // Start idle loop with slight delay to let other sounds settle
+      setTimeout(() => {
+        audioEngine.playItemIdleLoop(newNode.item!.soundSignature, 0, 0);
+      }, 1500);
+    }
+
     // Trigger surprise events for room transition
     if (oldRoomId) {
       surpriseEventManager.onRoomLeave();
@@ -174,6 +203,13 @@ async function initializeGame(state: GameState, saveData?: SaveData): Promise<vo
   // Item presence feedback in starting room (only for new game)
   if (!saveData && currentNode?.item && !currentNode.item.collected) {
     audioEngine.playItemPresence();
+  }
+
+  // Start item idle loop for starting room if it has an uncollected item
+  if (currentNode?.item && !currentNode.item.collected) {
+    setTimeout(() => {
+      audioEngine.playItemIdleLoop(currentNode.item!.soundSignature, 0, 0);
+    }, 2000);
   }
 
   // Start surprise events for starting room

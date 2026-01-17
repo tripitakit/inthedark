@@ -9,6 +9,7 @@ import type { ItemSoundSignature } from '../types';
 export class ItemSounds {
   private context: AudioContext;
   private masterGain: GainNode;
+  private activeIdleLoops: Map<ItemSoundSignature, ReturnType<typeof setInterval>> = new Map();
 
   constructor(context: AudioContext, masterGain: GainNode) {
     this.context = context;
@@ -646,6 +647,196 @@ export class ItemSounds {
       lfo.start(now);
       osc.stop(now + duration);
       lfo.stop(now + duration);
+    }
+  }
+
+  // ========================================
+  // IDLE LOCATOR SOUNDS
+  // ========================================
+
+  /**
+   * Get idle sound configuration for a signature category
+   */
+  private getIdleConfig(signature: ItemSoundSignature): { interval: number; variation: number } {
+    // Glass/crystal items: higher, shorter interval
+    if (['glassChime', 'crystalResonance', 'crystalHum', 'chaliceRing'].includes(signature)) {
+      return { interval: 6, variation: 3 };
+    }
+    // Metal items: medium interval
+    if (['metalScrape', 'electricBuzz', 'techBeep', 'templeBell'].includes(signature)) {
+      return { interval: 8, variation: 4 };
+    }
+    // Celestial items: longer, more mysterious interval
+    if (['cosmicResonance', 'voidWhisper', 'starlightPulse', 'harmonicTone', 'memoryEcho'].includes(signature)) {
+      return { interval: 10, variation: 5 };
+    }
+    // Default
+    return { interval: 7, variation: 3 };
+  }
+
+  /**
+   * Play a very quiet idle/locator sound for an item
+   * These help players find items by ear
+   *
+   * @param signature The item's sound signature
+   * @param pan Stereo pan position (-1 to +1)
+   * @param distance Distance in room units (affects volume)
+   */
+  playIdleLoop(signature: ItemSoundSignature, pan: number = 0, distance: number = 0): void {
+    // Stop any existing loop for this signature
+    this.stopIdleLoop(signature);
+
+    const config = this.getIdleConfig(signature);
+    const baseGain = 0.05; // Very quiet
+    const distanceGain = Math.max(0.01, baseGain / (1 + distance * 0.3));
+
+    // Create panner for spatial positioning
+    const panner = this.context.createStereoPanner();
+    panner.pan.value = pan;
+
+    // Create quiet gain node
+    const idleGain = this.context.createGain();
+    idleGain.gain.value = distanceGain;
+
+    panner.connect(idleGain);
+    idleGain.connect(this.masterGain);
+
+    // Play idle sound function
+    const playIdleSound = () => {
+      this.playQuietSignature(signature, panner);
+    };
+
+    // Initial play
+    playIdleSound();
+
+    // Set up interval with variation
+    const getNextInterval = () => {
+      const variation = (Math.random() - 0.5) * 2 * config.variation;
+      return (config.interval + variation) * 1000;
+    };
+
+    const scheduleNext = () => {
+      const intervalId = setTimeout(() => {
+        playIdleSound();
+        scheduleNext();
+      }, getNextInterval());
+
+      this.activeIdleLoops.set(signature, intervalId);
+    };
+
+    scheduleNext();
+  }
+
+  /**
+   * Stop an idle loop for a signature
+   */
+  stopIdleLoop(signature: ItemSoundSignature): void {
+    const intervalId = this.activeIdleLoops.get(signature);
+    if (intervalId) {
+      clearTimeout(intervalId);
+      this.activeIdleLoops.delete(signature);
+    }
+  }
+
+  /**
+   * Stop all active idle loops
+   */
+  stopAllIdleLoops(): void {
+    for (const [signature] of this.activeIdleLoops) {
+      this.stopIdleLoop(signature);
+    }
+  }
+
+  /**
+   * Play a very quiet version of a signature for idle sounds
+   */
+  private playQuietSignature(signature: ItemSoundSignature, destination: AudioNode): void {
+    const now = this.context.currentTime;
+
+    // Create a quiet, short version based on signature category
+    switch (signature) {
+      // Glass/crystal: soft high chime
+      case 'glassChime':
+      case 'crystalResonance':
+      case 'crystalHum':
+      case 'chaliceRing': {
+        const freq = signature === 'glassChime' ? 2800 :
+                     signature === 'crystalHum' ? 1200 :
+                     signature === 'chaliceRing' ? 2000 : 800;
+        const osc = this.context.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        const gain = this.context.createGain();
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+        osc.connect(gain);
+        gain.connect(destination);
+        osc.start(now);
+        osc.stop(now + 0.15);
+        break;
+      }
+
+      // Metal/tech: short beep or buzz
+      case 'metalScrape':
+      case 'electricBuzz':
+      case 'techBeep':
+      case 'templeBell': {
+        const freq = signature === 'templeBell' ? 180 :
+                     signature === 'electricBuzz' ? 120 : 800;
+        const osc = this.context.createOscillator();
+        osc.type = signature === 'electricBuzz' ? 'sawtooth' : 'sine';
+        osc.frequency.value = freq;
+        const gain = this.context.createGain();
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+        osc.connect(gain);
+        gain.connect(destination);
+        osc.start(now);
+        osc.stop(now + 0.2);
+        break;
+      }
+
+      // Celestial: ethereal shimmer
+      case 'cosmicResonance':
+      case 'voidWhisper':
+      case 'starlightPulse':
+      case 'harmonicTone':
+      case 'memoryEcho': {
+        const osc1 = this.context.createOscillator();
+        const osc2 = this.context.createOscillator();
+        osc1.type = 'sine';
+        osc2.type = 'sine';
+        const baseFreq = signature === 'voidWhisper' ? 400 :
+                        signature === 'starlightPulse' ? 600 : 500;
+        osc1.frequency.value = baseFreq;
+        osc2.frequency.value = baseFreq * 1.01; // Slight beating
+        const gain = this.context.createGain();
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.06, now + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(destination);
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + 0.25);
+        osc2.stop(now + 0.25);
+        break;
+      }
+
+      // Default: simple tone
+      default: {
+        const osc = this.context.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = 600;
+        const gain = this.context.createGain();
+        gain.gain.setValueAtTime(0.05, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+        osc.connect(gain);
+        gain.connect(destination);
+        osc.start(now);
+        osc.stop(now + 0.15);
+      }
     }
   }
 }

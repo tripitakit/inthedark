@@ -97,6 +97,9 @@ export class Interaction {
     item.collected = true;
     this.gameState.addToInventory(item);
 
+    // Stop item idle loop since we picked it up
+    audioEngine.stopItemIdleLoop(item.soundSignature);
+
     // Feedback audio: pickup generico + firma sonora dell'oggetto + voice
     audioEngine.playPickup();
     setTimeout(() => {

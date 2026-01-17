@@ -1,9 +1,10 @@
-import type { Direction, ItemSoundSignature } from '../types';
+import type { Direction, ItemSoundSignature, SurfaceType } from '../types';
 import { speak } from './VoiceSelector';
 import { ItemSounds } from './ItemSounds';
 import { GameFeedback } from './GameFeedback';
 import { VictorySequence } from './VictorySequence';
 import { SurpriseEffects } from './SurpriseEffects';
+import { createMixer, AudioMixer } from './AudioMixer';
 import { MASTER_VOLUME } from '../constants';
 
 // Spoken direction names for compass
@@ -29,6 +30,7 @@ export class AudioEngine {
   private gameFeedback: GameFeedback | null = null;
   private victorySequence: VictorySequence | null = null;
   private surpriseEffects: SurpriseEffects | null = null;
+  private mixer: AudioMixer | null = null;
 
   /**
    * Get the audio context (needed for SpatialAudio and Sonar)
@@ -45,6 +47,13 @@ export class AudioEngine {
   }
 
   /**
+   * Get the audio mixer for bus routing and ducking
+   */
+  getMixer(): AudioMixer | null {
+    return this.mixer;
+  }
+
+  /**
    * Initialize the AudioContext (must be called after user gesture)
    */
   async init(): Promise<void> {
@@ -52,6 +61,9 @@ export class AudioEngine {
     this.masterGain = this.context.createGain();
     this.masterGain.gain.value = MASTER_VOLUME;
     this.masterGain.connect(this.context.destination);
+
+    // Initialize mixer for ducking support
+    this.mixer = createMixer(this.context, this.masterGain);
 
     // Initialize specialized modules
     this.itemSounds = new ItemSounds(this.context, this.masterGain);
@@ -78,12 +90,12 @@ export class AudioEngine {
   // MOVEMENT & FEEDBACK SOUNDS
   // ========================================
 
-  playFootstep(): void {
-    this.gameFeedback?.playFootstep();
+  playFootstep(surface: SurfaceType = 'stone'): void {
+    this.gameFeedback?.playFootstep(surface);
   }
 
-  playFootsteps(): Promise<void> {
-    return this.gameFeedback?.playFootsteps() ?? Promise.resolve();
+  playFootsteps(surface: SurfaceType = 'stone'): Promise<void> {
+    return this.gameFeedback?.playFootsteps(surface) ?? Promise.resolve();
   }
 
   playObstacle(): void {
@@ -126,6 +138,18 @@ export class AudioEngine {
     this.gameFeedback?.playLockPresence();
   }
 
+  playRoomTransition(fromEnv?: string, toEnv?: string): void {
+    this.gameFeedback?.playRoomTransition(fromEnv, toEnv);
+  }
+
+  playDoorOpen(): void {
+    this.gameFeedback?.playDoorOpen();
+  }
+
+  playDiscoveryChime(): void {
+    this.gameFeedback?.playDiscoveryChime();
+  }
+
   // ========================================
   // SPEECH
   // ========================================
@@ -164,6 +188,18 @@ export class AudioEngine {
 
   playSignatureEcho(signature: ItemSoundSignature): void {
     this.itemSounds?.playSignatureEcho(signature);
+  }
+
+  playItemIdleLoop(signature: ItemSoundSignature, pan: number = 0, distance: number = 0): void {
+    this.itemSounds?.playIdleLoop(signature, pan, distance);
+  }
+
+  stopItemIdleLoop(signature: ItemSoundSignature): void {
+    this.itemSounds?.stopIdleLoop(signature);
+  }
+
+  stopAllItemIdleLoops(): void {
+    this.itemSounds?.stopAllIdleLoops();
   }
 
   // ========================================

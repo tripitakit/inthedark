@@ -93,7 +93,7 @@ class WaterDrip extends BaseAmbientGenerator {
   private nextDripTimeout: number | null = null;
 
   constructor(context: AudioContext) {
-    super(context, 0.3);
+    super(context, 0.85);
   }
 
   start(): void {
@@ -2302,7 +2302,7 @@ class StoneDrip extends BaseAmbientGenerator {
   private nextDripTimeout: number | null = null;
 
   constructor(context: AudioContext) {
-    super(context, 0.25);
+    super(context, 0.8);
   }
 
   start(): void {

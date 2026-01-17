@@ -1,6 +1,7 @@
 import { AudioEngine } from './AudioEngine';
 import { GraphWorld } from '../game/GraphWorld';
 import { GameState } from '../game/GameState';
+import { BinauralAudio } from './BinauralAudio';
 import type { ItemSoundSignature } from '../types';
 import {
   SONAR_ECHO_WALL_DELAY,
@@ -21,6 +22,7 @@ export class Sonar {
   private audioEngine: AudioEngine;
   private graphWorld: GraphWorld;
   private gameState: GameState;
+  private binauralAudio: BinauralAudio | null = null;
 
   constructor(
     audioEngine: AudioEngine,
@@ -30,6 +32,20 @@ export class Sonar {
     this.audioEngine = audioEngine;
     this.graphWorld = graphWorld;
     this.gameState = gameState;
+  }
+
+  /**
+   * Set the binaural audio processor for HRTF
+   */
+  setBinauralAudio(binaural: BinauralAudio): void {
+    this.binauralAudio = binaural;
+  }
+
+  /**
+   * Get the binaural audio processor
+   */
+  getBinauralAudio(): BinauralAudio | null {
+    return this.binauralAudio;
   }
 
   /**
@@ -46,6 +62,11 @@ export class Sonar {
     }
 
     const orientation = this.gameState.orientation;
+
+    // Update binaural audio listener orientation
+    if (this.binauralAudio) {
+      this.binauralAudio.updateListenerOrientation(orientation);
+    }
     const currentNode = this.gameState.currentNode;
 
     // Verifica se c'è un passaggio e se c'è una serratura

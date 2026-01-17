@@ -14,6 +14,7 @@
         "south": null,
         "west": null
       },
+      "surface": "grass",
       "ambience": {
         "type": "forest",
         "reverbDecay": 1.0,
@@ -34,6 +35,7 @@
         "south": "forest_start",
         "west": "forest_thicket"
       },
+      "surface": "grass",
       "ambience": {
         "type": "forest",
         "reverbDecay": 1.2,
@@ -54,6 +56,7 @@
         "south": "forest_path",
         "west": null
       },
+      "surface": "grass",
       "ambience": {
         "type": "forest-open",
         "reverbDecay": 0.8,
@@ -80,6 +83,7 @@
         "south": null,
         "west": null
       },
+      "surface": "grass",
       "ambience": {
         "type": "forest-dense",
         "reverbDecay": 1.5,
@@ -106,6 +110,7 @@
         "south": "cave_entrance",
         "west": "forest_path"
       },
+      "surface": "water",
       "ambience": {
         "type": "forest-stream",
         "reverbDecay": 1.3,
@@ -127,6 +132,7 @@
         "south": "cave_hall",
         "west": null
       },
+      "surface": "stone",
       "ambience": {
         "type": "cave-entrance",
         "reverbDecay": 1.8,
@@ -148,6 +154,7 @@
         "south": "cave_crossroads",
         "west": null
       },
+      "surface": "stone",
       "ambience": {
         "type": "cave",
         "reverbDecay": 2.5,
@@ -169,6 +176,7 @@
         "south": "cave_chasm",
         "west": "cave_pool"
       },
+      "surface": "stone",
       "ambience": {
         "type": "cave",
         "reverbDecay": 2.8,
@@ -190,6 +198,7 @@
         "south": null,
         "west": null
       },
+      "surface": "water",
       "ambience": {
         "type": "cave-water",
         "reverbDecay": 3.0,
@@ -216,6 +225,7 @@
         "south": null,
         "west": "cave_crossroads"
       },
+      "surface": "stone",
       "ambience": {
         "type": "cave-tight",
         "reverbDecay": 1.8,
@@ -242,6 +252,7 @@
         "south": "cave_deep",
         "west": null
       },
+      "surface": "stone",
       "ambience": {
         "type": "cave-deep",
         "reverbDecay": 3.5,
@@ -270,6 +281,7 @@
         "south": "ship_airlock",
         "west": null
       },
+      "surface": "stone",
       "ambience": {
         "type": "cave-alien",
         "reverbDecay": 3.2,
@@ -297,6 +309,7 @@
         "south": "ship_corridor",
         "west": null
       },
+      "surface": "metal",
       "ambience": {
         "type": "ship",
         "reverbDecay": 1.5,
@@ -325,6 +338,7 @@
         "south": "ship_bridge",
         "west": null
       },
+      "surface": "metal",
       "ambience": {
         "type": "ship",
         "reverbDecay": 1.8,
@@ -346,6 +360,7 @@
         "south": null,
         "west": "ship_corridor"
       },
+      "surface": "metal",
       "ambience": {
         "type": "ship-secret",
         "reverbDecay": 2.5,
@@ -373,6 +388,7 @@
         "south": "ship_quarters",
         "west": "ship_engineering"
       },
+      "surface": "metal",
       "ambience": {
         "type": "ship-bridge",
         "reverbDecay": 2.0,
@@ -401,6 +417,7 @@
         "south": null,
         "west": null
       },
+      "surface": "metal",
       "ambience": {
         "type": "ship-engineering",
         "reverbDecay": 1.6,
@@ -435,6 +452,7 @@
         "south": null,
         "west": "ship_bridge"
       },
+      "surface": "metal",
       "ambience": {
         "type": "ship-reactor",
         "reverbDecay": 1.4,
@@ -462,6 +480,7 @@
         "south": "temple_entrance",
         "west": null
       },
+      "surface": "metal",
       "ambience": {
         "type": "ship-quarters",
         "reverbDecay": 1.2,
@@ -489,6 +508,7 @@
         "south": null,
         "west": "ship_quarters"
       },
+      "surface": "metal",
       "ambience": {
         "type": "ship-storage",
         "reverbDecay": 1.3,
@@ -516,6 +536,7 @@
         "south": "temple_antechamber",
         "west": null
       },
+      "surface": "stone",
       "ambience": {
         "type": "temple",
         "reverbDecay": 3.5,
@@ -537,6 +558,7 @@
         "south": "temple_main_hall",
         "west": "temple_offering_room"
       },
+      "surface": "stone",
       "ambience": {
         "type": "temple",
         "reverbDecay": 4.0,
@@ -558,6 +580,7 @@
         "south": null,
         "west": "temple_antechamber"
       },
+      "surface": "stone",
       "ambience": {
         "type": "temple-chapel",
         "reverbDecay": 3.8,
@@ -584,6 +607,7 @@
         "south": null,
         "west": null
       },
+      "surface": "stone",
       "ambience": {
         "type": "temple-offering",
         "reverbDecay": 3.6,
@@ -610,6 +634,7 @@
         "south": "temple_sanctuary",
         "west": "temple_crypt_stairs"
       },
+      "surface": "stone",
       "ambience": {
         "type": "temple-hall",
         "reverbDecay": 4.5,
@@ -632,6 +657,7 @@
         "south": null,
         "west": "temple_main_hall"
       },
+      "surface": "stone",
       "ambience": {
         "type": "temple-library",
         "reverbDecay": 3.2,
@@ -658,6 +684,7 @@
         "south": "temple_crypt",
         "west": null
       },
+      "surface": "stone",
       "ambience": {
         "type": "temple-crypt",
         "reverbDecay": 3.8,
@@ -679,6 +706,7 @@
         "south": "temple_inner_sanctum",
         "west": null
       },
+      "surface": "stone",
       "ambience": {
         "type": "temple-crypt",
         "reverbDecay": 4.2,
@@ -707,6 +735,7 @@
         "south": null,
         "west": "temple_meditation"
       },
+      "surface": "stone",
       "ambience": {
         "type": "temple-sanctuary",
         "reverbDecay": 4.0,
@@ -735,6 +764,7 @@
         "south": "temple_library",
         "west": "temple_sanctuary"
       },
+      "surface": "stone",
       "ambience": {
         "type": "temple-observatory",
         "reverbDecay": 3.5,
@@ -755,6 +785,7 @@
         "south": null,
         "west": null
       },
+      "surface": "carpet",
       "ambience": {
         "type": "temple-meditation",
         "reverbDecay": 3.0,
@@ -781,6 +812,7 @@
         "south": "temple_portal_room",
         "west": null
       },
+      "surface": "stone",
       "ambience": {
         "type": "temple-sanctum",
         "reverbDecay": 4.5,
@@ -809,6 +841,7 @@
         "south": "celestial_arrival",
         "west": null
       },
+      "surface": "stone",
       "ambience": {
         "type": "temple-portal",
         "reverbDecay": 5.0,
@@ -840,6 +873,7 @@
         "south": "celestial_crossroads",
         "west": null
       },
+      "surface": "crystal",
       "ambience": {
         "type": "celestial",
         "reverbDecay": 5.5,
@@ -861,6 +895,7 @@
         "south": "celestial_spire",
         "west": "celestial_void_edge"
       },
+      "surface": "crystal",
       "ambience": {
         "type": "celestial-crossroads",
         "reverbDecay": 5.0,
@@ -882,6 +917,7 @@
         "south": null,
         "west": "celestial_crossroads"
       },
+      "surface": "crystal",
       "ambience": {
         "type": "celestial-garden",
         "reverbDecay": 4.5,
@@ -909,6 +945,7 @@
         "south": "celestial_garden",
         "west": null
       },
+      "surface": "crystal",
       "ambience": {
         "type": "celestial-fountain",
         "reverbDecay": 5.5,
@@ -936,6 +973,7 @@
         "south": null,
         "west": null
       },
+      "surface": "crystal",
       "ambience": {
         "type": "celestial-void",
         "reverbDecay": 6.0,
@@ -963,6 +1001,7 @@
         "south": "celestial_void_edge",
         "west": null
       },
+      "surface": "crystal",
       "ambience": {
         "type": "celestial-echo",
         "reverbDecay": 7.0,
@@ -984,6 +1023,7 @@
         "south": "celestial_crossroads",
         "west": "celestial_echo_chamber"
       },
+      "surface": "crystal",
       "ambience": {
         "type": "celestial-spire",
         "reverbDecay": 5.5,
@@ -1005,6 +1045,7 @@
         "south": null,
         "west": "celestial_spire"
       },
+      "surface": "crystal",
       "ambience": {
         "type": "celestial-archive",
         "reverbDecay": 4.8,
@@ -1038,6 +1079,7 @@
         "south": "celestial_archive",
         "west": "celestial_fountain"
       },
+      "surface": "crystal",
       "ambience": {
         "type": "celestial-memory",
         "reverbDecay": 6.0,
@@ -1065,6 +1107,7 @@
         "south": "celestial_spire",
         "west": "celestial_resonance"
       },
+      "surface": "crystal",
       "ambience": {
         "type": "celestial-throne",
         "reverbDecay": 5.8,
@@ -1086,6 +1129,7 @@
         "south": null,
         "west": "celestial_throne"
       },
+      "surface": "crystal",
       "ambience": {
         "type": "celestial-bridge",
         "reverbDecay": 5.2,
@@ -1107,6 +1151,7 @@
         "south": null,
         "west": "celestial_bridge"
       },
+      "surface": "crystal",
       "ambience": {
         "type": "celestial-oracle",
         "reverbDecay": 6.5,
@@ -1141,6 +1186,7 @@
         "south": null,
         "west": null
       },
+      "surface": "crystal",
       "ambience": {
         "type": "celestial-resonance",
         "reverbDecay": 6.0,
@@ -1169,6 +1215,7 @@
         "south": "celestial_throne",
         "west": null
       },
+      "surface": "crystal",
       "ambience": {
         "type": "celestial-transcendence",
         "reverbDecay": 8.0,

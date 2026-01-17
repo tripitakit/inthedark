@@ -1,5 +1,5 @@
 import { ROTATION_LEFT, ROTATION_RIGHT } from '../types';
-import type { Direction } from '../types';
+import type { Direction, SurfaceType } from '../types';
 import { GameState } from './GameState';
 import { graphWorld } from './GraphWorld';
 import { audioEngine } from '../audio/AudioEngine';
@@ -21,9 +21,12 @@ export class Movement {
   private gameState: GameState;
   private sonar: Sonar | null = null;
   private ambienceManager: AmbienceManager | null = null;
+  private visitedRooms: Set<string> = new Set();
 
   constructor(gameState: GameState) {
     this.gameState = gameState;
+    // Mark starting room as visited
+    this.visitedRooms.add(gameState.currentNode);
   }
 
   /**
@@ -59,9 +62,16 @@ export class Movement {
         return false;
       }
 
+      // Get source and target node data for audio cues
+      const sourceNode = graphWorld.getNode(currentNode);
+      const targetNodeData = graphWorld.getNode(targetNode);
+
+      // Determine surface type for footsteps
+      const surface: SurfaceType = targetNodeData?.surface ?? 'stone';
+
       // Movimento valido: annuncia direzione e riproduci passi
       audioEngine.playWalkingDirection(direction);
-      await audioEngine.playFootsteps();
+      await audioEngine.playFootsteps(surface);
 
       // Discover the edge we're walking through (both directions)
       this.gameState.discoverEdge(currentNode, direction);
@@ -71,17 +81,28 @@ export class Movement {
       // Ora entra nel nuovo nodo
       this.gameState.setCurrentNode(targetNode);
 
+      // Check if environment type changed - play room transition
+      const fromEnv = sourceNode?.ambience?.type;
+      const toEnv = targetNodeData?.ambience?.type;
+      if (fromEnv && toEnv && fromEnv !== toEnv) {
+        audioEngine.playRoomTransition(fromEnv, toEnv);
+      }
+
+      // Play discovery chime for first-time room visit
+      if (!this.visitedRooms.has(targetNode)) {
+        this.visitedRooms.add(targetNode);
+        audioEngine.playDiscoveryChime();
+      }
+
       // Trigger ambient transition
       if (this.ambienceManager) {
-        const node = graphWorld.getNode(targetNode);
-        if (node?.ambience) {
-          this.ambienceManager.transitionTo(node.ambience);
+        if (targetNodeData?.ambience) {
+          this.ambienceManager.transitionTo(targetNodeData.ambience);
         }
       }
 
       // Feedback presenza oggetto nel nuovo nodo
-      const node = graphWorld.getNode(targetNode);
-      if (node?.item && !node.item.collected) {
+      if (targetNodeData?.item && !targetNodeData.item.collected) {
         audioEngine.playItemPresence();
       }
 
@@ -108,6 +129,9 @@ export class Movement {
     this.gameState.setOrientation(newOrientation);
     audioEngine.playCompassTone(newOrientation);
 
+    // Update binaural audio listener orientation
+    this.updateBinauralOrientation(newOrientation);
+
     console.log(`Rotazione sinistra: ${oldOrientation} → ${newOrientation}`);
   }
 
@@ -120,6 +144,9 @@ export class Movement {
 
     this.gameState.setOrientation(newOrientation);
     audioEngine.playCompassTone(newOrientation);
+
+    // Update binaural audio listener orientation
+    this.updateBinauralOrientation(newOrientation);
 
     console.log(`Rotazione destra: ${oldOrientation} → ${newOrientation}`);
   }
@@ -135,7 +162,20 @@ export class Movement {
     this.gameState.setOrientation(newOrientation);
     audioEngine.playCompassTone(newOrientation);
 
+    // Update binaural audio listener orientation
+    this.updateBinauralOrientation(newOrientation);
+
     console.log(`Dietrofront: ${oldOrientation} → ${newOrientation}`);
+  }
+
+  /**
+   * Update binaural audio listener orientation
+   */
+  private updateBinauralOrientation(direction: Direction): void {
+    const binauralAudio = this.sonar?.getBinauralAudio();
+    if (binauralAudio) {
+      binauralAudio.updateListenerOrientation(direction);
+    }
   }
 
   /**

@@ -1,6 +1,9 @@
 // Direzioni cardinali
 export type Direction = 'north' | 'east' | 'south' | 'west';
 
+// Surface types for footstep sounds
+export type SurfaceType = 'stone' | 'metal' | 'grass' | 'water' | 'wood' | 'carpet' | 'crystal';
+
 // Connessioni di un nodo (null se non c'è passaggio)
 export interface NodeConnections {
   north: string | null;
@@ -134,6 +137,7 @@ export interface GameNode {
   description?: string;
   connections: NodeConnections;
   ambience?: AmbienceConfig;
+  surface?: SurfaceType;  // Floor surface for footstep sounds
   item?: GameItem | null;
   lock?: Lock | null;
 }
