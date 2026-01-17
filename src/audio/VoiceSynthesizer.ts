@@ -1,4 +1,4 @@
-import type { AudioEngine } from './AudioEngine';
+import { audioEngine } from './AudioEngine';
 import {
   selectEnglishVoice,
   areVoicesLoaded,
@@ -20,7 +20,7 @@ export class VoiceSynthesizer {
   private volume: number = 1.0;
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  constructor(_audioEngine: AudioEngine) {
+  constructor(_audioEngine: unknown) {
     // AudioEngine kept for interface compatibility but not used
     // Voice selection is handled by VoiceSelector
     selectEnglishVoice();
@@ -37,6 +37,12 @@ export class VoiceSynthesizer {
    * Speak a text string using Web Speech API
    */
   async speak(text: string): Promise<void> {
+    // Don't interrupt controls help speech
+    if (audioEngine.isSpeakingControls()) {
+      console.log('VoiceSynthesizer: Controls help is speaking, skipping');
+      return;
+    }
+
     if (this.isSpeaking) {
       console.log('VoiceSynthesizer: Already speaking');
       return;

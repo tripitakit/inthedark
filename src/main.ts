@@ -15,7 +15,7 @@ import { InventoryUI } from './ui/InventoryUI';
 import { RoomInfoUI } from './ui/RoomInfoUI';
 import alienAdventure from './data/levels/alien-adventure.json';
 import { SURPRISE_EVENTS } from './data/surpriseEvents';
-import type { LevelData, SaveData } from './types';
+import type { LevelData, SaveData, GameMode } from './types';
 import { NARRATION_DELAY, INITIAL_NARRATION_DELAY } from './constants';
 
 /**
@@ -42,6 +42,8 @@ const btnNewGame = getRequiredElement('btn-new-game') as HTMLButtonElement;
 const btnLoadGame = getRequiredElement('btn-load-game') as HTMLButtonElement;
 const voiceNarrationCheckbox = getRequiredElement('voice-narration') as HTMLInputElement;
 const binauralAudioCheckbox = getRequiredElement('binaural-audio') as HTMLInputElement;
+const modeEasyRadio = getRequiredElement('mode-easy') as HTMLInputElement;
+const modeHardRadio = getRequiredElement('mode-hard') as HTMLInputElement;
 
 // Global state
 let gameState: GameState;
@@ -82,10 +84,21 @@ function handleSaveGame(): void {
 }
 
 /**
+ * Get the selected game mode from radio buttons
+ */
+function getSelectedGameMode(): GameMode {
+  return modeHardRadio.checked ? 'hard' : 'easy';
+}
+
+/**
  * Initialize game systems with given state
  */
 async function initializeGame(state: GameState, saveData?: SaveData): Promise<void> {
   gameState = state;
+
+  // Set game mode from UI selection (or restore from save data)
+  const gameMode = saveData?.gameMode || getSelectedGameMode();
+  gameState.setGameMode(gameMode);
 
   // Initialize movement system
   movement = new Movement(gameState);
@@ -152,6 +165,7 @@ async function initializeGame(state: GameState, saveData?: SaveData): Promise<vo
   inputHandler.setOnNarrationToggle((enabled) => {
     voiceNarrationCheckbox.checked = enabled;
   });
+  inputHandler.setGameMode(gameMode);
   inputHandler.enable();
 
   // Set up room change listener for narration, surprise events, and item idle sounds
@@ -197,9 +211,20 @@ async function initializeGame(state: GameState, saveData?: SaveData): Promise<vo
   // Update UI and show game screen
   startScreen.classList.remove('active');
   gameScreen.classList.add('active');
-  controlsHelpElement.classList.add('active');
-  inventoryElement.classList.add('active');
-  roomInfoUI.setVisible(true);
+
+  // Show/hide UI elements based on game mode
+  if (gameMode === 'easy') {
+    controlsHelpElement.classList.add('active');
+    inventoryElement.classList.add('active');
+    roomInfoUI.setVisible(true);
+    minimap.setVisible(true);
+  } else {
+    // HARD mode: hide all visual UI
+    controlsHelpElement.classList.remove('active');
+    inventoryElement.classList.remove('active');
+    roomInfoUI.setVisible(false);
+    minimap.setVisible(false);
+  }
   updateUI();
 
   // Item presence feedback in starting room (only for new game)
@@ -217,19 +242,43 @@ async function initializeGame(state: GameState, saveData?: SaveData): Promise<vo
   // Start surprise events for starting room
   surpriseEventManager.onRoomEnter(gameState.currentNode);
 
-  // Narrate starting room if enabled (with a small delay to let audio init)
-  if (narrationEnabled && currentNode?.description) {
-    const startRoomName = currentNode.name || gameState.currentNode;
-    const startDescription = currentNode.description;
+  // In HARD mode, speak controls first, then room narration
+  // In EASY mode, just narrate the room
+  if (gameMode === 'hard') {
+    // Speak controls first
     setTimeout(() => {
-      roomNarrator.narrateRoom(
-        gameState.currentNode,
-        startRoomName,
-        gameState.orientation,
-        startDescription,
-        true
-      );
+      audioEngine.speakControls();
     }, INITIAL_NARRATION_DELAY);
+
+    // Then narrate room after controls (with longer delay)
+    if (narrationEnabled && currentNode?.description) {
+      const startRoomName = currentNode.name || gameState.currentNode;
+      const startDescription = currentNode.description;
+      setTimeout(() => {
+        roomNarrator.narrateRoom(
+          gameState.currentNode,
+          startRoomName,
+          gameState.orientation,
+          startDescription,
+          true
+        );
+      }, INITIAL_NARRATION_DELAY + 12000); // Wait for controls to finish (~12s)
+    }
+  } else {
+    // EASY mode: just narrate starting room if enabled
+    if (narrationEnabled && currentNode?.description) {
+      const startRoomName = currentNode.name || gameState.currentNode;
+      const startDescription = currentNode.description;
+      setTimeout(() => {
+        roomNarrator.narrateRoom(
+          gameState.currentNode,
+          startRoomName,
+          gameState.orientation,
+          startDescription,
+          true
+        );
+      }, INITIAL_NARRATION_DELAY);
+    }
   }
 
   console.log('Game initialized!');
@@ -256,7 +305,7 @@ async function startNewGame(): Promise<void> {
   state.debugLog();
 
   await initializeGame(state);
-  console.log('New game started! Use arrow keys to move.');
+  console.log('New game started! Use arrow keys to face directions, Tab to walk.');
 }
 
 /**
@@ -269,6 +318,13 @@ async function loadSavedGame(): Promise<void> {
   if (!saveData) {
     console.error('No save data found');
     return;
+  }
+
+  // Restore game mode selection in UI
+  if (saveData.gameMode === 'hard') {
+    modeHardRadio.checked = true;
+  } else {
+    modeEasyRadio.checked = true;
   }
 
   // Initialize audio

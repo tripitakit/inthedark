@@ -170,6 +170,26 @@
       color: #0af;
     }
 
+    #start-screen .option-row input[type="radio"] {
+      width: 16px;
+      height: 16px;
+      accent-color: #0af;
+      cursor: pointer;
+      margin-left: 0.5rem;
+    }
+
+    #start-screen .game-mode-row {
+      margin-top: 0.5rem;
+      padding-top: 0.5rem;
+      border-top: 1px solid #333;
+    }
+
+    #start-screen .game-mode-row .mode-label {
+      font-size: 0.9rem;
+      color: #888;
+      margin-right: 0.5rem;
+    }
+
     #start-screen .how-to-play {
       margin-top: 2rem;
       text-align: left;
@@ -480,7 +500,8 @@
       <h2>How to Play</h2>
 
       <p>
-        You are lost in total darkness. Navigate using <kbd>Arrow Keys</kbd> to move and turn.
+        You are lost in total darkness. Use <kbd>Arrow Keys</kbd> to face North, South, East, or West.
+        Press <kbd>Tab</kbd> to walk forward.
         Press <kbd>Enter</kbd> to activate your sonar and detect exits, items, and obstacles around you.
       </p>
       <p>
@@ -500,6 +521,13 @@
       <div class="option-row">
         <input type="checkbox" id="binaural-audio" name="binaural-audio" checked>
         <label for="binaural-audio">3D Audio / HRTF (use headphones)</label>
+      </div>
+      <div class="option-row game-mode-row">
+        <span class="mode-label">Game Mode:</span>
+        <input type="radio" id="mode-easy" name="game-mode" value="easy" checked>
+        <label for="mode-easy">Easy (with UI)</label>
+        <input type="radio" id="mode-hard" name="game-mode" value="hard">
+        <label for="mode-hard">Hard (audio only)</label>
       </div>
     </div>
     <div class="buttons">
@@ -623,7 +651,7 @@
 
       const howToPlayText = `
         Welcome to In The Dark, an audio adventure game.
-        You are lost in total darkness. Navigate using Arrow Keys to move and turn.
+        You are lost in total darkness. Use Arrow Keys to face North, South, East, or West. Press Tab to walk forward.
         Press Enter to activate your sonar and detect exits, items, and obstacles around you.
         Collect items with Space and use them to unlock passages.
         Press H for hints when you're stuck.

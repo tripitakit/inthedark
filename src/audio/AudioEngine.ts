@@ -33,6 +33,16 @@ export class AudioEngine {
   private surpriseEffects: SurpriseEffects | null = null;
   private mixer: AudioMixer | null = null;
 
+  // Flag to protect controls speech from being cancelled
+  private speakingControls: boolean = false;
+
+  /**
+   * Check if controls help is currently being spoken
+   */
+  isSpeakingControls(): boolean {
+    return this.speakingControls;
+  }
+
   /**
    * Get the audio context (needed for SpatialAudio and Sonar)
    */
@@ -137,6 +147,27 @@ export class AudioEngine {
 
   playSaveConfirm(): void {
     this.gameFeedback?.playSaveConfirm();
+    this.speakSaveConfirm();
+  }
+
+  /**
+   * Speak "Game saved" using the female voice
+   */
+  private speakSaveConfirm(): void {
+    const voices = speechSynthesis.getVoices();
+    const femaleVoice = this.selectFemaleVoice(voices);
+
+    const utterance = new SpeechSynthesisUtterance('Game saved');
+    utterance.rate = 0.85;
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+    utterance.lang = 'en-US';
+
+    if (femaleVoice) {
+      utterance.voice = femaleVoice;
+    }
+
+    speechSynthesis.speak(utterance);
   }
 
   playEmptyPickup(): void {
@@ -176,6 +207,10 @@ export class AudioEngine {
   }
 
   private speakDirection(prefix: string, direction: Direction): void {
+    // Don't cancel if controls are being spoken
+    if (this.speakingControls) {
+      return; // Skip direction speech while controls are playing
+    }
     speak(`${prefix} ${DIRECTION_SPEECH[direction]}`, { cancelPending: true });
   }
 
@@ -185,6 +220,92 @@ export class AudioEngine {
 
   playVoiceNarration(text: string): void {
     speak(text);
+  }
+
+  speakControls(): void {
+    // Set flag to protect from direction speech cancellation
+    this.speakingControls = true;
+
+    // Cancel any pending speech first
+    speechSynthesis.cancel();
+
+    const controlLines = [
+      'Controls.',
+      'Arrow Up faces North. Arrow Down faces South.',
+      'Arrow Left faces West. Arrow Right faces East.',
+      'Tab walks forward.',
+      'Enter activates sonar. Walls echo short, passages echo long.',
+      'Space picks up or uses items. Control cycles inventory.',
+      'S saves. H hints. P toggles narration. Escape repeats controls.',
+    ];
+
+    // Select a female voice for controls help
+    const voices = speechSynthesis.getVoices();
+    const femaleVoice = this.selectFemaleVoice(voices);
+
+    // Queue all lines
+    controlLines.forEach((line, index) => {
+      const utterance = new SpeechSynthesisUtterance(line);
+      utterance.rate = 0.85; // Slower, like narrator
+      utterance.pitch = 1.0; // Normal pitch for female voice
+      utterance.volume = 1.0;
+      utterance.lang = 'en-US';
+
+      if (femaleVoice) {
+        utterance.voice = femaleVoice;
+      }
+
+      // On last utterance, clear the protection flag
+      if (index === controlLines.length - 1) {
+        utterance.onend = () => {
+          this.speakingControls = false;
+        };
+        utterance.onerror = () => {
+          this.speakingControls = false;
+        };
+      }
+
+      speechSynthesis.speak(utterance);
+    });
+  }
+
+  /**
+   * Select a female English voice for controls help
+   */
+  private selectFemaleVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null {
+    // Preferred female voices in priority order
+    const preferredFemale = [
+      'Microsoft Zira',    // Windows - female
+      'Samantha',          // macOS - female
+      'Victoria',          // macOS - female
+      'Karen',             // macOS Australian - female
+      'Google UK English Female',
+      'Google US English', // Often female
+      'Fiona',             // macOS Scottish - female
+    ];
+
+    // Try to find a preferred female voice
+    for (const preferred of preferredFemale) {
+      const found = voices.find(
+        (v) => v.name.includes(preferred) && (v.lang.startsWith('en-') || v.lang.startsWith('en_'))
+      );
+      if (found) {
+        return found;
+      }
+    }
+
+    // Fallback: find any English female voice
+    const englishVoices = voices.filter(
+      (v) => v.lang.startsWith('en-') || v.lang.startsWith('en_')
+    );
+
+    const femaleVoice = englishVoices.find(
+      (v) => v.name.toLowerCase().includes('female')
+    ) || englishVoices.find(
+      (v) => !v.name.toLowerCase().includes('male')
+    );
+
+    return femaleVoice || null;
   }
 
   // ========================================

@@ -2,6 +2,7 @@ import type { GameItem } from '../types';
 import { GameState } from './GameState';
 import { GraphWorld } from './GraphWorld';
 import { audioEngine } from '../audio/AudioEngine';
+import { speak } from '../audio/VoiceSelector';
 
 // Display names for items (converts snake_case IDs to readable names)
 const ITEM_NAMES: Record<string, string> = {
@@ -153,6 +154,10 @@ export class Interaction {
     // Single-item lock: verify the object is correct
     if (lock.requiredItem !== selectedItem.id) {
       audioEngine.playError();
+      const itemName = ITEM_NAMES[selectedItem.id] || selectedItem.id.replace(/_/g, ' ');
+      setTimeout(() => {
+        speak(`The ${itemName} doesn't work here.`);
+      }, 300);
       return {
         type: 'error',
         message: 'Questo oggetto non funziona qui',
@@ -175,6 +180,10 @@ export class Interaction {
     }
 
     audioEngine.playUnlock();
+    const itemName = ITEM_NAMES[selectedItem.id] || selectedItem.id.replace(/_/g, ' ');
+    setTimeout(() => {
+      speak(`The ${itemName} unlocked the passage. You can now walk forward.`);
+    }, 300);
     console.log(`Sbloccato: ${lock.id} con ${selectedItem.id}`);
 
     return {
@@ -198,6 +207,10 @@ export class Interaction {
 
     if (!isValidItem) {
       audioEngine.playError();
+      const itemName = ITEM_NAMES[selectedItem.id] || selectedItem.id.replace(/_/g, ' ');
+      setTimeout(() => {
+        speak(`The ${itemName} doesn't work here.`);
+      }, 300);
       return {
         type: 'error',
         message: 'Questo oggetto non funziona qui',
@@ -208,6 +221,9 @@ export class Interaction {
     if (!hasItem1 || !hasItem2) {
       // Play a different sound to indicate partial progress
       audioEngine.playItemPresence(); // Hint that something more is needed
+      setTimeout(() => {
+        speak('Something more is needed to open this passage.');
+      }, 300);
       return {
         type: 'error',
         message: 'Serve qualcosa in più...',
@@ -235,6 +251,11 @@ export class Interaction {
     }
 
     audioEngine.playUnlock();
+    const item1Name = ITEM_NAMES[lock.requiredItem] || lock.requiredItem.replace(/_/g, ' ');
+    const item2Name = lock.requiredItem2 ? (ITEM_NAMES[lock.requiredItem2] || lock.requiredItem2.replace(/_/g, ' ')) : '';
+    setTimeout(() => {
+      speak(`The ${item1Name} and ${item2Name} combined to unlock the passage.`);
+    }, 300);
     console.log(`Sbloccato: ${lock.id} con ${lock.requiredItem} + ${lock.requiredItem2}`);
 
     return {

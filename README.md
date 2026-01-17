@@ -19,16 +19,18 @@ You awaken in total darkness with no memory of how you got there. Armed only wit
 
 | Key | Action |
 |-----|--------|
-| Arrow Up | Move forward |
-| Arrow Down | Turn around (180°) |
-| Arrow Left | Turn left |
-| Arrow Right | Turn right |
+| Arrow Up | Face North |
+| Arrow Down | Face South |
+| Arrow Left | Face West |
+| Arrow Right | Face East |
+| Tab | Walk forward |
 | Enter | Activate sonar pulse |
 | Space | Pick up item / Use selected item |
 | Ctrl | Cycle through inventory |
 | S | Save game |
 | H | Get a hint |
 | P | Toggle voice narration |
+| Escape | Speak controls help (Hard mode) |
 
 ## Audio Design
 

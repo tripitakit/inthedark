@@ -190,7 +190,7 @@ const PUZZLE_HINTS: PuzzleHint[] = [
     hints: [
       'Listen to the echoes... they reveal the path.',
       'Use sonar to discover passages in each direction.',
-      'Press Enter to sonar, arrows to move and turn.',
+      'Press Enter for sonar, arrows to face directions, Tab to walk.',
     ],
   },
 ];

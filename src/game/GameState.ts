@@ -1,4 +1,4 @@
-import type { Direction, PlayerState, GameItem, SaveData } from '../types';
+import type { Direction, PlayerState, GameItem, SaveData, GameMode } from '../types';
 
 const SAVE_KEY = 'inthedark_save';
 
@@ -12,6 +12,7 @@ export class GameState {
   private completedSequences: Set<string> = new Set();
   private hintLevels: Map<string, number> = new Map();
   private roomChangeCallbacks: ((newRoomId: string, oldRoomId?: string) => void)[] = [];
+  private _gameMode: GameMode = 'easy';
 
   constructor(startNode: string, startOrientation: Direction = 'north') {
     this.state = {
@@ -50,6 +51,14 @@ export class GameState {
 
   get visitedNodes(): string[] {
     return [...this.state.visitedNodes];
+  }
+
+  get gameMode(): GameMode {
+    return this._gameMode;
+  }
+
+  setGameMode(mode: GameMode): void {
+    this._gameMode = mode;
   }
 
   /**
@@ -264,6 +273,7 @@ export class GameState {
         triggeredEvents: Array.from(this.triggeredEvents),
         completedSequences: Array.from(this.completedSequences),
         hintLevels: Object.fromEntries(this.hintLevels),
+        gameMode: this._gameMode,
         timestamp: Date.now(),
       };
       localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
@@ -310,6 +320,7 @@ export class GameState {
     state.triggeredEvents = new Set(saveData.triggeredEvents || []);
     state.completedSequences = new Set(saveData.completedSequences || []);
     state.hintLevels = new Map(Object.entries(saveData.hintLevels || {}));
+    state._gameMode = saveData.gameMode || 'easy';
     return state;
   }
 

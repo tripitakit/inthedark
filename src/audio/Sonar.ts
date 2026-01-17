@@ -2,12 +2,16 @@ import { AudioEngine } from './AudioEngine';
 import { GraphWorld } from '../game/GraphWorld';
 import { GameState } from '../game/GameState';
 import { BinauralAudio } from './BinauralAudio';
+import { speak } from './VoiceSelector';
 import type { ItemSoundSignature } from '../types';
 import {
   SONAR_ECHO_WALL_DELAY,
   SONAR_ECHO_PASSAGE_DELAY,
   SONAR_LOCK_SOUND_DELAY,
 } from '../constants';
+
+// Tutorial rooms where sonar sounds are explained
+const TUTORIAL_ROOMS = ['forest_start', 'forest_path'];
 
 /**
  * Sonar - Orchestra la sequenza completa del sonar
@@ -23,6 +27,9 @@ export class Sonar {
   private graphWorld: GraphWorld;
   private gameState: GameState;
   private binauralAudio: BinauralAudio | null = null;
+  private tutorialShownForWall: boolean = false;
+  private tutorialShownForPassage: boolean = false;
+  private lockTutorialCount: number = 0; // Track first 3 lock encounters
 
   constructor(
     audioEngine: AudioEngine,
@@ -100,6 +107,11 @@ export class Sonar {
 
     setTimeout(() => {
       this.audioEngine.playEchoFiltered(hasPassageAhead);
+
+      // Tutorial narration in first two rooms (only in HARD mode)
+      if (this.gameState.gameMode === 'hard' && TUTORIAL_ROOMS.includes(currentNode)) {
+        this.speakTutorial(hasPassageAhead, hasLockedDoor);
+      }
     }, echoDelay);
 
     // 3. Eco firma oggetto richiesto (se c'è lock chiuso)
@@ -116,6 +128,37 @@ export class Sonar {
       console.log(`Sonar: ${orientation} - serratura chiusa (eco veloce + lock)`);
     } else {
       console.log(`Sonar: ${orientation} - muro (eco veloce)`);
+    }
+  }
+
+  /**
+   * Speak tutorial explanation for sonar sounds (only once per type)
+   */
+  private speakTutorial(hasPassage: boolean, hasLock: boolean): void {
+    // Small delay to let the echo sound finish
+    const tutorialDelay = 600;
+
+    if (hasPassage && !this.tutorialShownForPassage) {
+      this.tutorialShownForPassage = true;
+      setTimeout(() => {
+        speak('That long echo means an open passage ahead. You can walk forward.');
+      }, tutorialDelay);
+    } else if (!hasPassage && !hasLock && !this.tutorialShownForWall) {
+      this.tutorialShownForWall = true;
+      setTimeout(() => {
+        speak('That short echo means a wall. No passage in this direction.');
+      }, tutorialDelay);
+    } else if (hasLock && this.lockTutorialCount < 3) {
+      this.lockTutorialCount++;
+      const lockHints = [
+        'That chime after the echo means a locked passage. Find an item with the same sound to unlock it.',
+        'Another locked passage. Listen to the chime and search for the matching item in nearby rooms.',
+        'Remember, each lock has a unique sound. The item that unlocks it makes the same chime.',
+      ];
+      const hint = lockHints[this.lockTutorialCount - 1];
+      setTimeout(() => {
+        speak(hint);
+      }, tutorialDelay + 800); // Extra delay to let lock signature sound play first
     }
   }
 

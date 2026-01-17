@@ -1,6 +1,9 @@
 // Direzioni cardinali
 export type Direction = 'north' | 'east' | 'south' | 'west';
 
+// Game modes
+export type GameMode = 'easy' | 'hard';
+
 // Surface types for footstep sounds
 export type SurfaceType = 'stone' | 'metal' | 'grass' | 'water' | 'wood' | 'carpet' | 'crystal';
 
@@ -175,6 +178,7 @@ export interface SaveData {
   triggeredEvents: string[];      // Story event IDs that have been triggered
   completedSequences: string[];   // Sequence puzzle IDs that are completed
   hintLevels: Record<string, number>; // Hint progression per puzzle
+  gameMode: GameMode;             // Game difficulty mode
   timestamp: number;
 }
 

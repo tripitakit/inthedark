@@ -3,8 +3,12 @@ import type { Direction, SurfaceType } from '../types';
 import { GameState } from './GameState';
 import { graphWorld } from './GraphWorld';
 import { audioEngine } from '../audio/AudioEngine';
+import { speak } from '../audio/VoiceSelector';
 import type { Sonar } from '../audio/Sonar';
 import type { AmbienceManager } from '../audio/AmbienceManager';
+
+// Tutorial counter for item presence (module-level to persist across rooms)
+let itemPresenceTutorialCount = 0;
 
 // Label leggibili per le direzioni
 const DIRECTION_LABELS: Record<Direction, string> = {
@@ -104,6 +108,20 @@ export class Movement {
       // Feedback presenza oggetto nel nuovo nodo
       if (targetNodeData?.item && !targetNodeData.item.collected) {
         audioEngine.playItemPresence();
+
+        // Tutorial narration for item presence (only in HARD mode, first 3 times)
+        if (this.gameState.gameMode === 'hard' && itemPresenceTutorialCount < 3) {
+          itemPresenceTutorialCount++;
+          const itemHints = [
+            'That shimmer means there is an item here. Press Space to pick it up.',
+            'Another item nearby. Remember, Space picks up items in the room.',
+            'Items have unique sounds. Use Control to cycle through your inventory.',
+          ];
+          const hint = itemHints[itemPresenceTutorialCount - 1];
+          setTimeout(() => {
+            speak(hint);
+          }, 800);
+        }
       }
 
       console.log(`Movimento: ${currentNode} → ${targetNode} (${direction})`);
