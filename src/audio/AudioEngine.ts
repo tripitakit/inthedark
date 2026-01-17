@@ -36,7 +36,7 @@ export class AudioEngine {
   async init(): Promise<void> {
     this.context = new AudioContext();
     this.masterGain = this.context.createGain();
-    this.masterGain.gain.value = 0.5;
+    this.masterGain.gain.value = 0.75; // Increased for better audibility
     this.masterGain.connect(this.context.destination);
 
     // Resume context se sospeso
@@ -1541,8 +1541,8 @@ export class AudioEngine {
   }
 
   // ========================================
-  // SURPRISE EVENT AUDIO (stub methods)
-  // Full implementations will be added in Phase 2
+  // SURPRISE EVENT AUDIO
+  // Atmospheric effects for immersion
   // ========================================
 
   /**
@@ -1551,10 +1551,21 @@ export class AudioEngine {
    */
   playSurpriseEffect(soundId: string): void {
     if (!this.context || !this.masterGain) return;
-    console.log(`SurpriseEffect: ${soundId} (stub - full implementation pending)`);
-    // TODO: Implement specific effects based on soundId
-    // For now, play a generic mysterious sound
-    this.playGenericSurpriseEffect();
+    console.log(`SurpriseEffect: ${soundId}`);
+
+    switch (soundId) {
+      case 'distantThunder': this.playDistantThunder(); break;
+      case 'creepyWhisper': this.playCreepyWhisper(); break;
+      case 'metalGroan': this.playMetalGroan(); break;
+      case 'alienChirp': this.playAlienChirp(); break;
+      case 'stoneShift': this.playStoneShift(); break;
+      case 'etherealChoir': this.playEtherealChoir(); break;
+      case 'heartbeat': this.playHeartbeat(); break;
+      case 'staticBurst': this.playStaticBurst(); break;
+      case 'deepRumble': this.playDeepRumble(); break;
+      case 'crystalChime': this.playSurpriseCrystalChime(); break;
+      default: this.playGenericSurpriseEffect(); break;
+    }
   }
 
   /**
@@ -1563,24 +1574,451 @@ export class AudioEngine {
    */
   playSurpriseAmbient(soundId: string): void {
     if (!this.context || !this.masterGain) return;
-    console.log(`SurpriseAmbient: ${soundId} (stub - full implementation pending)`);
-    // TODO: Implement specific ambient sounds
+    console.log(`SurpriseAmbient: ${soundId}`);
+
+    switch (soundId) {
+      case 'windGust': this.playWindGust(); break;
+      case 'distantVoices': this.playDistantVoices(); break;
+      case 'machineAwaken': this.playMachineAwaken(); break;
+      case 'cosmicHum': this.playCosmicHum(); break;
+      default: this.playGenericSurpriseEffect(); break;
+    }
   }
 
   /**
-   * Play voice narration (lo-fi computer voice)
+   * Play voice narration using Web Speech API
    * @param text Text to speak
    */
   playVoiceNarration(text: string): void {
+    if (!('speechSynthesis' in window)) {
+      console.log(`VoiceNarration: "${text}" (Web Speech API not available)`);
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.95;
+    utterance.pitch = 0.5;
+    utterance.volume = 1.0;
+    utterance.lang = 'en-US';
+
+    const voices = speechSynthesis.getVoices();
+    const preferredMaleVoices = [
+      'Microsoft David', 'Daniel', 'Alex', 'Google UK English Male',
+      'Microsoft Mark', 'Thomas'
+    ];
+
+    let selectedVoice: SpeechSynthesisVoice | undefined;
+    for (const name of preferredMaleVoices) {
+      selectedVoice = voices.find((v) => v.name.includes(name));
+      if (selectedVoice) break;
+    }
+
+    if (!selectedVoice) {
+      const englishVoices = voices.filter(
+        (v) => v.lang.startsWith('en-') || v.lang.startsWith('en_')
+      );
+      selectedVoice = englishVoices.find(
+        (v) => !v.name.toLowerCase().includes('female')
+      ) || englishVoices[0];
+    }
+
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+    }
+
+    speechSynthesis.speak(utterance);
+  }
+
+  // === SURPRISE EFFECT IMPLEMENTATIONS ===
+
+  private playDistantThunder(): void {
     if (!this.context || !this.masterGain) return;
-    console.log(`VoiceNarration: "${text}" (stub - VoiceSynthesizer pending)`);
-    // TODO: Implement via VoiceSynthesizer
-    // For now, play a notification chime
-    this.playNotificationChime();
+    const now = this.context.currentTime;
+
+    // Low rumble with noise
+    const bufferSize = this.context.sampleRate * 2;
+    const buffer = this.context.createBuffer(1, bufferSize, this.context.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.3));
+    }
+
+    const noise = this.context.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = this.context.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 150;
+
+    const gain = this.context.createGain();
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.4, now + 0.1);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 2);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.masterGain);
+
+    noise.start(now);
+    noise.stop(now + 2);
+  }
+
+  private playCreepyWhisper(): void {
+    if (!this.context || !this.masterGain) return;
+    const now = this.context.currentTime;
+
+    // Breathy noise with modulation
+    const bufferSize = this.context.sampleRate;
+    const buffer = this.context.createBuffer(1, bufferSize, this.context.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      const env = Math.sin(Math.PI * i / bufferSize);
+      data[i] = (Math.random() * 2 - 1) * env * 0.3;
+    }
+
+    const noise = this.context.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = this.context.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = 800;
+    filter.Q.value = 2;
+
+    const gain = this.context.createGain();
+    gain.gain.value = 0.25;
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.masterGain);
+
+    noise.start(now);
+  }
+
+  private playMetalGroan(): void {
+    if (!this.context || !this.masterGain) return;
+    const now = this.context.currentTime;
+
+    const osc = this.context.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(80, now);
+    osc.frequency.exponentialRampToValueAtTime(40, now + 1.5);
+
+    const filter = this.context.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(200, now);
+    filter.frequency.exponentialRampToValueAtTime(100, now + 1.5);
+
+    const gain = this.context.createGain();
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.3, now + 0.2);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 1.5);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.masterGain);
+
+    osc.start(now);
+    osc.stop(now + 1.5);
+  }
+
+  private playAlienChirp(): void {
+    if (!this.context || !this.masterGain) return;
+    const now = this.context.currentTime;
+
+    for (let i = 0; i < 3; i++) {
+      const osc = this.context.createOscillator();
+      osc.type = 'sine';
+      const startFreq = 2000 + Math.random() * 1000;
+      osc.frequency.setValueAtTime(startFreq, now + i * 0.15);
+      osc.frequency.exponentialRampToValueAtTime(startFreq * 0.5, now + i * 0.15 + 0.1);
+
+      const gain = this.context.createGain();
+      gain.gain.setValueAtTime(0, now + i * 0.15);
+      gain.gain.linearRampToValueAtTime(0.15, now + i * 0.15 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.15 + 0.1);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.start(now + i * 0.15);
+      osc.stop(now + i * 0.15 + 0.12);
+    }
+  }
+
+  private playStoneShift(): void {
+    if (!this.context || !this.masterGain) return;
+    const now = this.context.currentTime;
+
+    // Grinding noise
+    const bufferSize = this.context.sampleRate;
+    const buffer = this.context.createBuffer(1, bufferSize, this.context.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.sin(Math.PI * i / bufferSize);
+    }
+
+    const noise = this.context.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = this.context.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 300;
+
+    const gain = this.context.createGain();
+    gain.gain.value = 0.35;
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.masterGain);
+
+    noise.start(now);
+  }
+
+  private playEtherealChoir(): void {
+    if (!this.context || !this.masterGain) return;
+    const now = this.context.currentTime;
+
+    const frequencies = [220, 330, 440, 550];
+    for (const freq of frequencies) {
+      const osc = this.context.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+
+      const gain = this.context.createGain();
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.08, now + 0.5);
+      gain.gain.linearRampToValueAtTime(0.08, now + 2);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 3);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.start(now);
+      osc.stop(now + 3);
+    }
+  }
+
+  private playHeartbeat(): void {
+    if (!this.context || !this.masterGain) return;
+    const now = this.context.currentTime;
+
+    for (let beat = 0; beat < 2; beat++) {
+      const osc = this.context.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = 50;
+
+      const gain = this.context.createGain();
+      const beatTime = now + beat * 0.3;
+      gain.gain.setValueAtTime(0, beatTime);
+      gain.gain.linearRampToValueAtTime(0.4, beatTime + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.01, beatTime + 0.2);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.start(beatTime);
+      osc.stop(beatTime + 0.25);
+    }
+  }
+
+  private playStaticBurst(): void {
+    if (!this.context || !this.masterGain) return;
+    const now = this.context.currentTime;
+
+    const bufferSize = this.context.sampleRate * 0.3;
+    const buffer = this.context.createBuffer(1, bufferSize, this.context.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1);
+    }
+
+    const noise = this.context.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = this.context.createBiquadFilter();
+    filter.type = 'highpass';
+    filter.frequency.value = 2000;
+
+    const gain = this.context.createGain();
+    gain.gain.setValueAtTime(0.3, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.masterGain);
+
+    noise.start(now);
+    noise.stop(now + 0.3);
+  }
+
+  private playDeepRumble(): void {
+    if (!this.context || !this.masterGain) return;
+    const now = this.context.currentTime;
+
+    const osc = this.context.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = 30;
+
+    const osc2 = this.context.createOscillator();
+    osc2.type = 'sine';
+    osc2.frequency.value = 35;
+
+    const gain = this.context.createGain();
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.35, now + 0.5);
+    gain.gain.linearRampToValueAtTime(0.35, now + 1.5);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 2.5);
+
+    osc.connect(gain);
+    osc2.connect(gain);
+    gain.connect(this.masterGain);
+
+    osc.start(now);
+    osc2.start(now);
+    osc.stop(now + 2.5);
+    osc2.stop(now + 2.5);
+  }
+
+  private playSurpriseCrystalChime(): void {
+    if (!this.context || !this.masterGain) return;
+    const now = this.context.currentTime;
+
+    const frequencies = [1200, 1500, 1800, 2400];
+    for (let i = 0; i < frequencies.length; i++) {
+      const osc = this.context.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = frequencies[i];
+
+      const gain = this.context.createGain();
+      gain.gain.setValueAtTime(0, now + i * 0.1);
+      gain.gain.linearRampToValueAtTime(0.12, now + i * 0.1 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.1 + 0.8);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.start(now + i * 0.1);
+      osc.stop(now + i * 0.1 + 0.85);
+    }
+  }
+
+  // === SURPRISE AMBIENT IMPLEMENTATIONS ===
+
+  private playWindGust(): void {
+    if (!this.context || !this.masterGain) return;
+    const now = this.context.currentTime;
+
+    const bufferSize = this.context.sampleRate * 3;
+    const buffer = this.context.createBuffer(1, bufferSize, this.context.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      const env = Math.sin(Math.PI * i / bufferSize);
+      data[i] = (Math.random() * 2 - 1) * env;
+    }
+
+    const noise = this.context.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = this.context.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = 400;
+    filter.Q.value = 0.5;
+
+    const gain = this.context.createGain();
+    gain.gain.value = 0.25;
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.masterGain);
+
+    noise.start(now);
+  }
+
+  private playDistantVoices(): void {
+    if (!this.context || !this.masterGain) return;
+    const now = this.context.currentTime;
+
+    // Multiple filtered noise layers
+    for (let i = 0; i < 3; i++) {
+      const bufferSize = this.context.sampleRate * 2;
+      const buffer = this.context.createBuffer(1, bufferSize, this.context.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let j = 0; j < bufferSize; j++) {
+        data[j] = (Math.random() * 2 - 1) * Math.sin(Math.PI * j / bufferSize);
+      }
+
+      const noise = this.context.createBufferSource();
+      noise.buffer = buffer;
+
+      const filter = this.context.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.value = 300 + i * 200;
+      filter.Q.value = 5;
+
+      const gain = this.context.createGain();
+      gain.gain.value = 0.08;
+
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.masterGain);
+
+      noise.start(now + i * 0.3);
+    }
+  }
+
+  private playMachineAwaken(): void {
+    if (!this.context || !this.masterGain) return;
+    const now = this.context.currentTime;
+
+    const osc = this.context.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(20, now);
+    osc.frequency.exponentialRampToValueAtTime(100, now + 2);
+
+    const filter = this.context.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(50, now);
+    filter.frequency.exponentialRampToValueAtTime(500, now + 2);
+
+    const gain = this.context.createGain();
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.25, now + 1);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 3);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.masterGain);
+
+    osc.start(now);
+    osc.stop(now + 3);
+  }
+
+  private playCosmicHum(): void {
+    if (!this.context || !this.masterGain) return;
+    const now = this.context.currentTime;
+
+    const frequencies = [110, 165, 220, 275];
+    for (const freq of frequencies) {
+      const osc = this.context.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+
+      const gain = this.context.createGain();
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.06, now + 1);
+      gain.gain.linearRampToValueAtTime(0.06, now + 3);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 4);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.start(now);
+      osc.stop(now + 4);
+    }
   }
 
   /**
-   * Generic surprise effect - eerie tone
+   * Generic surprise effect - eerie tone (fallback)
    */
   private playGenericSurpriseEffect(): void {
     if (!this.context || !this.masterGain) return;
@@ -1598,7 +2036,7 @@ export class AudioEngine {
 
     const gain = this.context.createGain();
     gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(0.15, now + 0.1);
+    gain.gain.linearRampToValueAtTime(0.2, now + 0.1);
     gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
 
     osc.connect(filter);
@@ -1607,35 +2045,6 @@ export class AudioEngine {
 
     osc.start(now);
     osc.stop(now + 0.5);
-  }
-
-  /**
-   * Notification chime for voice placeholder
-   */
-  private playNotificationChime(): void {
-    if (!this.context || !this.masterGain) return;
-
-    const now = this.context.currentTime;
-    const notes = [440, 550, 660];
-
-    for (let i = 0; i < notes.length; i++) {
-      const startTime = now + i * 0.12;
-
-      const osc = this.context.createOscillator();
-      osc.type = 'sine';
-      osc.frequency.value = notes[i];
-
-      const gain = this.context.createGain();
-      gain.gain.setValueAtTime(0, startTime);
-      gain.gain.linearRampToValueAtTime(0.12, startTime + 0.03);
-      gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.2);
-
-      osc.connect(gain);
-      gain.connect(this.masterGain);
-
-      osc.start(startTime);
-      osc.stop(startTime + 0.2);
-    }
   }
 }
 

@@ -11,7 +11,7 @@ export class GameState {
   private triggeredEvents: Set<string> = new Set();
   private completedSequences: Set<string> = new Set();
   private hintLevels: Map<string, number> = new Map();
-  private roomChangeCallbacks: ((roomId: string) => void)[] = [];
+  private roomChangeCallbacks: ((newRoomId: string, oldRoomId?: string) => void)[] = [];
 
   constructor(startNode: string, startOrientation: Direction = 'north') {
     this.state = {
@@ -63,14 +63,14 @@ export class GameState {
     }
     // Notify room change callbacks (only if actually changed)
     if (nodeId !== previousNode) {
-      this.roomChangeCallbacks.forEach(callback => callback(nodeId));
+      this.roomChangeCallbacks.forEach(callback => callback(nodeId, previousNode));
     }
   }
 
   /**
    * Register a callback to be called when room changes
    */
-  onRoomChange(callback: (roomId: string) => void): void {
+  onRoomChange(callback: (newRoomId: string, oldRoomId?: string) => void): void {
     this.roomChangeCallbacks.push(callback);
   }
 

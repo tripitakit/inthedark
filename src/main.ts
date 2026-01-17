@@ -2,6 +2,7 @@ import { audioEngine } from './audio/AudioEngine';
 import { Sonar } from './audio/Sonar';
 import { AmbienceManager } from './audio/AmbienceManager';
 import { RoomNarrator } from './audio/RoomNarrator';
+import { SurpriseEventManager } from './audio/SurpriseEventManager';
 import { GameState } from './game/GameState';
 import { graphWorld } from './game/GraphWorld';
 import { Movement } from './game/Movement';
@@ -12,6 +13,7 @@ import { Minimap } from './ui/Minimap';
 import { InventoryUI } from './ui/InventoryUI';
 import { RoomInfoUI } from './ui/RoomInfoUI';
 import alienAdventure from './data/levels/alien-adventure.json';
+import { SURPRISE_EVENTS } from './data/surpriseEvents';
 import type { LevelData, SaveData } from './types';
 
 /**
@@ -46,6 +48,7 @@ let minimap: Minimap;
 let inventoryUI: InventoryUI;
 let roomInfoUI: RoomInfoUI;
 let roomNarrator: RoomNarrator;
+let surpriseEventManager: SurpriseEventManager;
 
 /**
  * Updates all UI components
@@ -104,6 +107,10 @@ async function initializeGame(state: GameState, saveData?: SaveData): Promise<vo
   // Initialize hint system
   const hintSystem = new HintSystem(gameState, audioEngine);
 
+  // Initialize surprise event manager for atmospheric effects
+  surpriseEventManager = new SurpriseEventManager(audioEngine, gameState);
+  surpriseEventManager.registerEvents(SURPRISE_EVENTS);
+
   // Initialize room narrator with checkbox state
   const narrationEnabled = voiceNarrationCheckbox.checked;
   roomNarrator = new RoomNarrator(audioEngine, narrationEnabled);
@@ -129,8 +136,15 @@ async function initializeGame(state: GameState, saveData?: SaveData): Promise<vo
   });
   inputHandler.enable();
 
-  // Set up room change listener for narration
-  gameState.onRoomChange((newRoomId) => {
+  // Set up room change listener for narration and surprise events
+  gameState.onRoomChange((newRoomId, oldRoomId) => {
+    // Trigger surprise events for room transition
+    if (oldRoomId) {
+      surpriseEventManager.onRoomLeave();
+    }
+    surpriseEventManager.onRoomEnter(newRoomId);
+
+    // Narrate the new room
     const node = graphWorld.getNode(newRoomId);
     if (node?.description) {
       const roomName = node.name || newRoomId;
@@ -155,6 +169,9 @@ async function initializeGame(state: GameState, saveData?: SaveData): Promise<vo
   if (!saveData && currentNode?.item && !currentNode.item.collected) {
     audioEngine.playItemPresence();
   }
+
+  // Start surprise events for starting room
+  surpriseEventManager.onRoomEnter(gameState.currentNode);
 
   // Narrate starting room if enabled (with a small delay to let audio init)
   if (narrationEnabled && currentNode?.description) {
