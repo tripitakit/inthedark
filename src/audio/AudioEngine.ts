@@ -1908,11 +1908,32 @@ export class AudioEngine {
     if (!this.context || !this.masterGain) return;
     const now = this.context.currentTime;
 
-    const bufferSize = this.context.sampleRate * 3;
+    // Longer duration with extended fade out
+    const duration = 5; // 5 seconds total
+    const bufferSize = this.context.sampleRate * duration;
     const buffer = this.context.createBuffer(1, bufferSize, this.context.sampleRate);
     const data = buffer.getChannelData(0);
+
+    // Asymmetric envelope: quick attack (0.5s), sustain (1s), long fade out (3.5s)
+    const attackEnd = 0.5 / duration;   // 10% of buffer
+    const sustainEnd = 1.5 / duration;  // 30% of buffer
+
     for (let i = 0; i < bufferSize; i++) {
-      const env = Math.sin(Math.PI * i / bufferSize);
+      const t = i / bufferSize;
+      let env: number;
+
+      if (t < attackEnd) {
+        // Quick attack
+        env = t / attackEnd;
+      } else if (t < sustainEnd) {
+        // Sustain at peak
+        env = 1.0;
+      } else {
+        // Long exponential fade out
+        const fadeProgress = (t - sustainEnd) / (1 - sustainEnd);
+        env = Math.pow(1 - fadeProgress, 2); // Exponential curve for natural fade
+      }
+
       data[i] = (Math.random() * 2 - 1) * env;
     }
 
