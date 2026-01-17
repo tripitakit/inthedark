@@ -421,7 +421,7 @@
     </div>
     <div class="options">
       <div class="option-row">
-        <input type="checkbox" id="voice-narration" name="voice-narration">
+        <input type="checkbox" id="voice-narration" name="voice-narration" checked>
         <label for="voice-narration">Voice Narration (room descriptions)</label>
       </div>
     </div>
@@ -566,24 +566,39 @@
     }
 
     // Try multiple methods to ensure voices load
-    // Method 1: Try immediately
-    if (!speakHowToPlay()) {
-      // Method 2: Listen for voiceschanged event
-      speechSynthesis.onvoiceschanged = () => {
-        if (speakHowToPlay()) {
-          speechSynthesis.onvoiceschanged = null;
-        }
-      };
+    function trySpeak() {
+      // Method 1: Try immediately
+      if (!speakHowToPlay()) {
+        // Method 2: Listen for voiceschanged event
+        speechSynthesis.onvoiceschanged = () => {
+          if (speakHowToPlay()) {
+            speechSynthesis.onvoiceschanged = null;
+          }
+        };
 
-      // Method 3: Polling fallback (some browsers need this)
-      let attempts = 0;
-      const pollVoices = setInterval(() => {
-        attempts++;
-        if (speakHowToPlay() || attempts > 20) {
-          clearInterval(pollVoices);
-        }
-      }, 100);
+        // Method 3: Polling fallback (some browsers need this)
+        let attempts = 0;
+        const pollVoices = setInterval(() => {
+          attempts++;
+          if (speakHowToPlay() || attempts > 20) {
+            clearInterval(pollVoices);
+          }
+        }, 100);
+      }
     }
+
+    // Try on page load
+    trySpeak();
+
+    // Method 4: Browsers may block auto-play audio until user interaction
+    // Add click listener as fallback
+    document.addEventListener('click', function onFirstClick() {
+      if (!hasSpoken) {
+        console.log('HowToPlay: Triggered by user interaction');
+        trySpeak();
+      }
+      document.removeEventListener('click', onFirstClick);
+    }, { once: true });
   </script>
   <script type="module" src="/src/main.ts"></script>
 </body>
